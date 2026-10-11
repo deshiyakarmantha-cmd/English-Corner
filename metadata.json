@@ -1,0 +1,6 @@
+{
+  "name": "English Corner - Sanjanani Literary Festival 2026",
+  "description": "Official interactive platform for the English Corner at Sanjanani Literary Festival 2026, hosted at the historic Asgiri Maha Vihara Maha Pirivena in Kandy, Sri Lanka. Featuring English language guides, grammar explorations, literature eras, William Shakespeare retrospectives, and interactive writing and play activities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

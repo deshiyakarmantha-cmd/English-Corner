@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", Georgia, Cambria, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+}
+
+/* Custom literary styles and print support */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+.paper-texture {
+  background-color: #faf7f2;
+  background-image: radial-gradient(#d5cbb8 0.75px, transparent 0.75px), radial-gradient(#e8dfcf 0.75px, #faf7f2 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+.parchment-border {
+  border-image: linear-gradient(to bottom, #d4af37, #8b5a2b, #d4af37) 1;
+}
+
+@media print {
+  header, footer, .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}

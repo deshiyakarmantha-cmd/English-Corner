@@ -9,10 +9,35 @@ export default defineConfig(() => {
     plugins: [
       react(),
       tailwindcss(),
+      {
+        name: 'vite-entry-resolver',
+        transformIndexHtml: {
+          order: 'pre',
+          handler(html) {
+            return html
+              .replace(/<link rel="stylesheet"[^>]*href="[^"]*assets\/[^"]*\.css"[^>]*>/gi, '')
+              .replace(
+                /<script type="module"[^>]*src="[^"]*assets\/[^"]*\.js"[^>]*><\/script>/gi,
+                '<script type="module" src="/src/main.tsx"></script>'
+              );
+          },
+        },
+      },
     ],
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname, '.'),
+      },
+    },
+    build: {
+      outDir: 'dist',
+      assetsDir: 'assets',
+      rollupOptions: {
+        output: {
+          entryFileNames: 'assets/[name].js',
+          chunkFileNames: 'assets/[name].js',
+          assetFileNames: 'assets/[name].[ext]',
+        },
       },
     },
     server: {

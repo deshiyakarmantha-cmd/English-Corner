@@ -103,9 +103,15 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCertificate }) => {
 
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
-          <p>
-            © 2026 Sanjanani Literary Festival Committee · Asgiri Maha Vihara Maha Pirivena, Kandy, Sri Lanka.
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+            <p>
+              © 2026 Sanjanani Literary Festival Committee · Asgiri Maha Vihara Maha Pirivena, Kandy, Sri Lanka.
+            </p>
+            <span className="hidden sm:inline text-stone-600">|</span>
+            <p className="text-amber-400 font-medium tracking-wide">
+              Developer: Oshadha Vedith
+            </p>
+          </div>
 
           <button
             onClick={scrollToTop}

@@ -3,6 +3,13 @@ import { FESTIVAL_METADATA } from '../data/festivalData';
 import { BookOpen, Sparkles, Scroll, Landmark } from 'lucide-react';
 import heroImage from '../assets/images/sanjanani_english_corner_hero_1791314924841.jpg';
 
+<img
+src={heroImage}
+alt="English Corner at Sanjanani Literary Festival 2026"
+referrerPolicy="no-referrer"
+className="w-full h-full object cover"
+/>
+
 export const HeroSection: React.FC = () => {
   return (
     <section id="pavilion" className="relative pt-8 pb-16 lg:pt-14 lg:pb-24 overflow-hidden border-b border-stone-200">

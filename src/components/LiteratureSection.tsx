@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LITERATURE_ERAS } from '../data/festivalData';
 import { BookMarked, Feather, Quote, ChevronRight } from 'lucide-react';
+import literatureImage from '../assets/images/kandy_asgiri_literary_fest_1791314962470.jpg';
 
 export const LiteratureSection: React.FC = () => {
   const [selectedEraId, setSelectedEraId] = useState<string>(LITERATURE_ERAS[0].id);
@@ -21,7 +22,7 @@ export const LiteratureSection: React.FC = () => {
             Chronicles of English Literature
           </h2>
           <p className="mt-3 text-base text-stone-600 leading-relaxed">
-            Traverse five centuries of poetic revolution, social realism, and colonial deconstruction—culminating in the unique, fragrant cadence of Sri Lankan English writing rooted in Kandy&apos;s hills.
+            Traverse five centuries of poetic revolution, social realism, and colonial deconstruction—culminating in the unique, fragrant cadence of Sri Lankan English writing rooted in Kandy and its monastic traditions.
           </p>
         </div>
 
@@ -121,7 +122,7 @@ export const LiteratureSection: React.FC = () => {
                   Why We Teach This at Asgiri Pirivena
                 </h4>
                 <p className="text-xs text-stone-700 leading-relaxed mb-4">
-                  Literature is human consciousness speaking across time. When monastic scholars read the Romantics or Shakespeare, they observe how Western poets wrestled with the exact inquiries that Buddhist suttas address: the transience of beauty, the roots of sorrow, and the quest for liberation.
+                  Literature is human consciousness speaking across time. When monastic scholars read the Romantics or Shakespeare, they observe how Western poets wrestled with the exact inquiries that still shape modern life: love, mortality, civic duty, and the soul's unrest.
                 </p>
                 <div className="p-4 bg-white/90 border border-stone-200 rounded-xl">
                   <p className="font-serif italic text-xs text-stone-800 leading-relaxed">
@@ -159,7 +160,7 @@ export const LiteratureSection: React.FC = () => {
                 The Sacred Ola Leaf Meets English Typography
               </h3>
               <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-                For over two centuries, monastic pirivenas in Kandy have been pivotal in transmitting the Theravada Buddhist Canon to the Western world. Through pioneering translations of the Dhammapada and the Sutta Pitaka into English, the scholarly monks of Asgiri Maha Vihara bridged the ancient Pali linguistic world with international academia.
+                For over two centuries, monastic pirivenas in Kandy have been pivotal in transmitting the Theravada Buddhist Canon to the Western world. Through pioneering translations of the Dhamma and scholarly textual work, they have long connected ancient learning with modern English expression.
               </p>
               <div className="flex flex-wrap gap-4 pt-2 text-xs text-amber-200/90 font-mono">
                 <span>• Pali to English Lexicons</span>
@@ -171,7 +172,7 @@ export const LiteratureSection: React.FC = () => {
             <div className="lg:col-span-5">
               <div className="rounded-xl overflow-hidden border border-stone-700 bg-stone-800 aspect-4/3">
                 <img
-                  src="/src/assets/images/kandy_asgiri_literary_fest_1791314962470.jpg"
+                  src={literatureImage}
                   alt="Scholarly pavilion at Asgiri Maha Vihara Pirivena Kandy"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"

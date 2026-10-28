@@ -5,11 +5,10 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(({ command }) => {
   return {
-    base: '/English-Corner/',
+    base: './',
     plugins: [
       react(),
       tailwindcss(),
-      // AI Studio preview සඳහා පමණක් මෙම entry resolver එක ක්‍රියාත්මක වන සේ සකසා ඇත
       ...(command === 'serve' ? [{
         name: 'vite-entry-resolver',
         transformIndexHtml: {

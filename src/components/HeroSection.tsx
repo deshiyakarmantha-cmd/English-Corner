@@ -1,6 +1,7 @@
 import React from 'react';
 import { FESTIVAL_METADATA } from '../data/festivalData';
 import { BookOpen, Sparkles, Scroll, Landmark } from 'lucide-react';
+import heroImage from '../assets/images/sanjanani_english_corner_hero_1791314924841.jpg';
 
 export const HeroSection: React.FC = () => {
   return (
@@ -54,7 +55,7 @@ export const HeroSection: React.FC = () => {
           <div className="lg:col-span-7 flex flex-col justify-between">
             <div className="relative group overflow-hidden rounded-2xl border border-stone-300 shadow-md bg-stone-900 aspect-16/9">
               <img
-                src="/src/assets/images/sanjanani_english_corner_hero_1791314924841.jpg"
+                src={heroImage}
                 alt="English Corner at Sanjanani Literary Festival 2026, Asgiri Maha Vihara Maha Pirivena Kandy"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover object-center group-hover:scale-[1.01] transition-transform duration-700"
@@ -88,12 +89,12 @@ export const HeroSection: React.FC = () => {
                 Fostering Global Expression from the Foothills of Kandy
               </h2>
 
-              <p className="mt-4 text-sm text-stone-700 leading-relaxed first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:float-left first-letter:mr-2.5 first-letter:text-amber-950">
-                Founded during the medieval kingdom of Kandy, Asgiri Maha Vihara Maha Pirivena has preserved sacred Buddhist scriptures for centuries. At Sanjanani 2026, the English Corner serves as a vibrant gateway for monk students, visiting scholars, and school participants to explore the beauty, syntactic discipline, and expressive power of the English tongue.
+              <p className="mt-4 text-sm text-stone-700 leading-relaxed first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:float-left first-letter:mr-2.5 first-letter:text-amber-900">
+                Founded during the medieval kingdom of Kandy, Asgiri Maha Vihara Maha Pirivena has preserved sacred Buddhist scriptures for centuries. At Sanjanani 2026, the English Corner serves as a bridge between monastic scholarship and the living stream of modern English usage.
               </p>
 
               <p className="mt-3 text-sm text-stone-700 leading-relaxed">
-                Step inside to master English grammar, explore world literature from Elizabethan drama to modern post-colonial epics, immerse yourself in our William Shakespeare review, and participate in live writing and linguistic challenges.
+                Step inside to master English grammar, explore world literature from Elizabethan drama to modern post-colonial epics, immerse yourself in our William Shakespeare review, and participate in workshops that celebrate every tone of expression.
               </p>
             </div>
 

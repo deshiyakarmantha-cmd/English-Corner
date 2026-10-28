@@ -3,7 +3,7 @@ import { SHAKESPEARE_WORKS, SHAKESPEARE_COINED_PHRASES } from '../data/festivalD
 import { ShakespeareWork } from '../types';
 import { Volume2, VolumeX, Sparkles, Theater, BookOpen, Music, Check } from 'lucide-react';
 import shakespearePortraitImage from '../assets/images/william_shakespeare_portrait_1791314938105.jpg';
-<img  src={shakespearePortraitImage} alt="William Shakespeare" />
+
 const FAMOUS_LINES_FOR_METER = [
   {
     line: 'Shall I compare thee to a summer\'s day?',

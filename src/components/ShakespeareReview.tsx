@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SHAKESPEARE_WORKS, SHAKESPEARE_COINED_PHRASES } from '../data/festivalData';
 import { ShakespeareWork } from '../types';
 import { Volume2, VolumeX, Sparkles, Theater, BookOpen, Music, Check } from 'lucide-react';
+import shakespearePortraitImage from '../assets/images/william_shakespeare_portrait_1791314938105.jpg';
 
 const FAMOUS_LINES_FOR_METER = [
   {
@@ -62,13 +63,11 @@ export const ShakespeareReview: React.FC = () => {
   const [meterPlaying, setMeterPlaying] = useState(false);
   const [currentBeat, setCurrentBeat] = useState<number>(-1);
 
-  // Filter works by genre
   const filteredWorks = SHAKESPEARE_WORKS.filter(work => {
     if (selectedGenre === 'All') return true;
     return work.genre === selectedGenre;
   });
 
-  // Dramatic recitation using Web Speech API
   const handleRecite = (work: ShakespeareWork) => {
     if (!('speechSynthesis' in window)) {
       alert('Speech synthesis is not supported on this browser.');
@@ -83,10 +82,9 @@ export const ShakespeareReview: React.FC = () => {
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(work.iconicQuote.lines);
-    utterance.rate = 0.88; // Majestic deliberate tempo
+    utterance.rate = 0.88;
     utterance.pitch = 1.0;
 
-    // Pick a British or stately voice if available
     const voices = window.speechSynthesis.getVoices();
     const statelyVoice = voices.find(v => v.lang.includes('en-GB') || v.name.includes('UK') || v.name.includes('Classic'));
     if (statelyVoice) utterance.voice = statelyVoice;
@@ -98,7 +96,6 @@ export const ShakespeareReview: React.FC = () => {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Iambic pentameter rhythmic beat simulator
   useEffect(() => {
     let interval: any;
     if (meterPlaying) {
@@ -134,7 +131,7 @@ export const ShakespeareReview: React.FC = () => {
             William Shakespeare: Review & Canonical Works
           </h2>
           <p className="mt-3 text-base text-stone-600 leading-relaxed">
-            Few mortals have expanded the boundaries of language, human psychology, and dramatic catharsis like William Shakespeare (1564–1616). Discover comprehensive critical reviews of his landmark folios, iconic soliloquies, and enduring linguistic inventions.
+            Few mortals have expanded the boundaries of language, human psychology, and dramatic catharsis like William Shakespeare (1564–1616). Discover comprehensive critical reviews of his landmark plays, sonnets, and the enduring English phrases he invented.
           </p>
         </div>
 
@@ -145,7 +142,7 @@ export const ShakespeareReview: React.FC = () => {
           <div className="lg:col-span-4 flex flex-col">
             <div className="rounded-2xl overflow-hidden border border-stone-300 shadow-md bg-stone-900 aspect-3/4">
               <img
-                src="/src/assets/images/william_shakespeare_portrait_1791314938105.jpg"
+                src={shakespearePortraitImage}
                 alt="William Shakespeare museum oil portrait"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
@@ -169,8 +166,8 @@ export const ShakespeareReview: React.FC = () => {
                 The Architect of Modern Human Introspection
               </h3>
 
-              <p className="text-sm text-stone-700 leading-relaxed first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:float-left first-letter:mr-2.5 first-letter:text-amber-950">
-                Writing across thirty-seven plays, 154 sonnets, and two narrative poems, Shakespeare forged over 1,700 new words and countless idioms that remain foundational to English today. At London&apos;s open-air Globe Theatre on the River Thames, his plays captivated both common groundlings and royal monarchs, democratizing theater into a universal mirror of human virtue, corruption, grief, and transcendent love.
+              <p className="text-sm text-stone-700 leading-relaxed first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:float-left first-letter:mr-2.5 first-letter:text-amber-900">
+                Writing across thirty-seven plays, 154 sonnets, and two narrative poems, Shakespeare forged over 1,700 new words and countless idioms that remain foundational to English today. At the heart of his genius is his unmatched understanding of human emotion, power, grief, ambition, and love.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
@@ -389,7 +386,7 @@ export const ShakespeareReview: React.FC = () => {
                 Understanding Iambic Pentameter: The da-DUM Rhythm
               </h3>
               <p className="text-xs text-stone-600 mt-1 max-w-2xl">
-                Shakespeare composed largely in iambs: a metric foot with one unstressed syllable followed by a stressed syllable. Five iambs per line yield the legendary 10-syllable heartbeat of English drama.
+                Shakespeare composed largely in iambs: a metric foot with one unstressed syllable followed by a stressed syllable. Five iambs per line yield the legendary 10-syllable heartbeat of Elizabethan verse.
               </p>
             </div>
 

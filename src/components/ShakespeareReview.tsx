@@ -3,8 +3,8 @@ import { SHAKESPEARE_WORKS, SHAKESPEARE_COINED_PHRASES } from '../data/festivalD
 import { ShakespeareWork } from '../types';
 import { Volume2, VolumeX, Sparkles, Theater, BookOpen, Music, Check } from 'lucide-react';
 import shakespearePortraitImage from '<div styleName={} />
-<assets />
-<images />
+<assets /william_shakespeare_portrait_1791314938105>
+<images /william_shakespeare_portrait_1791314938105>
 <william_shakespeare_portrait_1791314938105></william_shakespeare_portrait_1791314938105>.jpg';
 
 const FAMOUS_LINES_FOR_METER = [

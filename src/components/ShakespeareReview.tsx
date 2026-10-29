@@ -4,6 +4,7 @@ import { ShakespeareWork } from '../types';
 import { Volume2, VolumeX, Sparkles, Theater, BookOpen, Music, Check, Landmark } from 'lucide-react';
 import shakespearePortraitImage from '../assets/images/william_shakespeare_portrait_1791314938105.jpg';
 import globeTheatreImage from '../assets/images/shakespeare_globe_theatre_books_1791314950626.jpg';
+import { SafeImage } from './SafeImage';
 
 const FAMOUS_LINES_FOR_METER = [
   {
@@ -142,10 +143,10 @@ export const ShakespeareReview: React.FC = () => {
           {/* Portrait Column */}
           <div className="lg:col-span-4 flex flex-col">
             <div className="rounded-2xl overflow-hidden border border-stone-300 shadow-md bg-stone-900 aspect-3/4">
-              <img
+              <SafeImage
                 src={shakespearePortraitImage}
+                fallbackName="william_shakespeare_portrait_1791314938105.jpg"
                 alt="William Shakespeare museum oil portrait"
-                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -192,10 +193,10 @@ export const ShakespeareReview: React.FC = () => {
               {/* Globe Theatre Feature */}
               <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-[#FAF7F2] border border-amber-950/15 rounded-xl mb-4">
                 <div className="w-full sm:w-32 h-24 rounded-lg overflow-hidden shrink-0 border border-stone-300 shadow-xs">
-                  <img
+                  <SafeImage
                     src={globeTheatreImage}
+                    fallbackName="shakespeare_globe_theatre_books_1791314950626.jpg"
                     alt="The Globe Theatre and Shakespeare First Folios"
-                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover"
                   />
                 </div>

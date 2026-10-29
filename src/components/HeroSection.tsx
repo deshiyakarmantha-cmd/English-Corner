@@ -2,6 +2,7 @@ import React from 'react';
 import { FESTIVAL_METADATA } from '../data/festivalData';
 import { BookOpen, Sparkles, Scroll, Landmark } from 'lucide-react';
 import heroImage from '../assets/images/sanjanani_english_corner_hero_1791314924841.jpg';
+import { SafeImage } from './SafeImage';
 
 export const HeroSection: React.FC = () => {
   return (
@@ -54,10 +55,10 @@ export const HeroSection: React.FC = () => {
           {/* Main Visual Column */}
           <div className="lg:col-span-7 flex flex-col justify-between">
             <div className="relative group overflow-hidden rounded-2xl border border-stone-300 shadow-md bg-stone-900 aspect-16/9">
-              <img
+              <SafeImage
                 src={heroImage}
+                fallbackName="sanjanani_english_corner_hero_1791314924841.jpg"
                 alt="English Corner at Sanjanani Literary Festival 2026, Asgiri Maha Vihara Maha Pirivena Kandy"
-                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover object-center group-hover:scale-[1.01] transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />

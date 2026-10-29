@@ -15,22 +15,11 @@ const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 
-// Initialize GoogleGenAI client on the server side with strict timeout & retry configuration
+// Initialize GoogleGenAI client on the server side
 const apiKey = process.env.GEMINI_API_KEY;
 let ai: GoogleGenAI | null = null;
 if (apiKey) {
-  ai = new GoogleGenAI({
-    apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      },
-      timeout: 12000,
-      retryOptions: {
-        attempts: 1,
-      },
-    },
-  });
+  ai = new GoogleGenAI();
 }
 
 function generateEducationalFallback(prompt: string): string {
@@ -79,33 +68,63 @@ Your guidelines:
       });
     }
 
-    const abortController = new AbortController();
-    const timeoutTimer = setTimeout(() => {
-      abortController.abort();
-    }, 11000);
+    if (!ai && process.env.GEMINI_API_KEY) {
+      ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    }
 
-    let reply = '';
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents,
-        config: {
-          systemInstruction,
-          temperature: 0.7,
-          abortSignal: abortController.signal,
-        },
+    if (!ai) {
+      console.warn('[Gemini Notice] No API key available; using scholar engine');
+      return res.json({
+        reply: generateEducationalFallback(promptText),
+        source: 'local_scholar',
       });
-      reply = response.text || '';
-    } catch (apiErr: any) {
-      console.warn('[Gemini Service Notice] Upstream Gemini API fallback engaged:', apiErr?.message || apiErr);
+    }
+
+    const candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
+    let reply = '';
+    let usedModel = '';
+
+    for (const modelName of candidateModels) {
+      const abortController = new AbortController();
+      const timeoutTimer = setTimeout(() => {
+        abortController.abort();
+      }, 15000);
+
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.7,
+            abortSignal: abortController.signal,
+          },
+        });
+        if (response.text && response.text.trim()) {
+          reply = response.text.trim();
+          usedModel = modelName;
+          clearTimeout(timeoutTimer);
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`[Gemini Model Notice] Model ${modelName} encounter:`, err?.message || err);
+      } finally {
+        clearTimeout(timeoutTimer);
+      }
+    }
+
+    if (!reply) {
+      console.warn('[Gemini Notice] Engaging local scholar fallback engine');
       reply = generateEducationalFallback(promptText);
-    } finally {
-      clearTimeout(timeoutTimer);
+      return res.json({
+        reply,
+        source: 'local_scholar',
+      });
     }
 
     return res.json({
-      reply: reply || generateEducationalFallback(promptText),
-      source: reply ? 'gemini' : 'fallback',
+      reply,
+      source: usedModel,
     });
   } catch (err: any) {
     console.warn('[Chat Endpoint Notice] Fallback response dispatched:', err?.message || err);

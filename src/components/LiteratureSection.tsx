@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LITERATURE_ERAS } from '../data/festivalData';
 import { BookMarked, Feather, Quote, ChevronRight } from 'lucide-react';
 import literatureImage from '../assets/images/kandy_asgiri_literary_fest_1791314962470.jpg';
+import { SafeImage } from './SafeImage';
 
 export const LiteratureSection: React.FC = () => {
   const [selectedEraId, setSelectedEraId] = useState<string>(LITERATURE_ERAS[0].id);
@@ -171,10 +172,10 @@ export const LiteratureSection: React.FC = () => {
 
             <div className="lg:col-span-5">
               <div className="rounded-xl overflow-hidden border border-stone-700 bg-stone-800 aspect-4/3">
-                <img
+                <SafeImage
                   src={literatureImage}
+                  fallbackName="kandy_asgiri_literary_fest_1791314962470.jpg"
                   alt="Scholarly pavilion at Asgiri Maha Vihara Pirivena Kandy"
-                  referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"
                 />
               </div>

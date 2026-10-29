@@ -7,6 +7,15 @@ export default defineConfig(({ command }) => {
   return {
     base: './',
     plugins: [
+      {
+        name: 'html-entry-transform',
+        enforce: 'pre' as const,
+        transformIndexHtml(html: string) {
+          return html
+            .replace(/<script[^>]*src=["']\.\/assets\/index\.js["'][^>]*><\/script>/gi, '<script type="module" src="/src/main.tsx"></script>')
+            .replace(/<link[^>]*href=["']\.\/assets\/index\.css["'][^>]*>/gi, '');
+        },
+      },
       react(),
       tailwindcss(),
     ],

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { SHAKESPEARE_WORKS, SHAKESPEARE_COINED_PHRASES } from '../data/festivalData';
 import { ShakespeareWork } from '../types';
-import { Volume2, VolumeX, Sparkles, Theater, BookOpen, Music, Check } from 'lucide-react';
+import { Volume2, VolumeX, Sparkles, Theater, BookOpen, Music, Check, Landmark } from 'lucide-react';
 import shakespearePortraitImage from '../assets/images/william_shakespeare_portrait_1791314938105.jpg';
+import globeTheatreImage from '../assets/images/shakespeare_globe_theatre_books_1791314950626.jpg';
 
 const FAMOUS_LINES_FOR_METER = [
   {
@@ -185,6 +186,26 @@ export const ShakespeareReview: React.FC = () => {
                   <span className="text-[10px] font-mono uppercase text-amber-900 font-bold block">First Folio</span>
                   <span className="text-2xl font-serif font-bold text-stone-900">1623 Folio</span>
                   <p className="text-[11px] text-stone-500 mt-0.5">Assembled by fellow actors Heminge & Condell.</p>
+                </div>
+              </div>
+
+              {/* Globe Theatre Feature */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-[#FAF7F2] border border-amber-950/15 rounded-xl mb-4">
+                <div className="w-full sm:w-32 h-24 rounded-lg overflow-hidden shrink-0 border border-stone-300 shadow-xs">
+                  <img
+                    src={globeTheatreImage}
+                    alt="The Globe Theatre and Shakespeare First Folios"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="text-xs text-stone-700">
+                  <span className="font-serif font-bold text-amber-950 text-sm block mb-1">
+                    Plate III — The Globe Playhouse & Canonical Folios
+                  </span>
+                  <p className="leading-relaxed">
+                    Under the open skies of London, Shakespeare&apos;s acting company, The King&apos;s Men, staged legendary dramas that shaped modern human psychology. Preserved in the 1623 First Folio, his words continue to echo from Stratford to Kandy.
+                  </p>
                 </div>
               </div>
             </div>

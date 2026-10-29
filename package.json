@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx server.ts",
     "start": "node server.ts",
-    "build": "rm -rf dist docs/assets assets && vite build --emptyOutDir && mkdir -p docs/assets assets && cp -r dist/assets/* docs/assets/ && cp -r dist/assets/* assets/ && cp dist/index.html ./index.html && cp dist/index.html docs/index.html",
+    "build": "vite build --emptyOutDir && rm -rf docs && mkdir -p docs assets && cp -r dist/* docs/ && cp dist/.nojekyll docs/ 2>/dev/null || true && cp -r dist/assets/* assets/ 2>/dev/null || true && cp -r dist/images assets/ 2>/dev/null || true",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"

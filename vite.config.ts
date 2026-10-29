@@ -9,19 +9,10 @@ export default defineConfig(({ command }) => {
     plugins: [
       react(),
       tailwindcss(),
-      ...(command === 'serve' ? [{
-        name: 'vite-entry-resolver',
-        transformIndexHtml: {
-          order: 'pre',
-          handler(html) {
-            return html;
-          }
-        }
-      }] : []),
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve('.'),
       },
     },
     build: {

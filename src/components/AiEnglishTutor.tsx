@@ -13,6 +13,7 @@ import {
   Feather,
   Loader2
 } from 'lucide-react';
+import { generateScholarResponse } from '../data/scholarAiEngine';
 
 interface ChatMessage {
   id: string;
@@ -22,12 +23,14 @@ interface ChatMessage {
 }
 
 const PRESET_PROMPTS = [
+  'Check my sentence: "Each of the monks have a book"',
   'Explain the Oxford Comma with examples',
   'How do I convert Passive Voice into Active Voice?',
   'Analyze Hamlet’s "To be or not to be" soliloquy',
-  'Check my sentence: "Each of the monks have a book"',
   'What English words originated from Sinhala or Sri Lanka?',
-  'Give me 5 literary adjectives to describe Kandy’s morning mist'
+  'Explain Iambic Pentameter with da-DUM meter',
+  'Give me 6 literary adjectives for Kandy’s morning mist',
+  'When and where is Sanjanani Festival 2026?'
 ];
 
 interface AiEnglishTutorProps {
@@ -109,84 +112,11 @@ How may I assist your English studies today?
     } catch (err: any) {
       console.warn('Network chat API unavailable, engaging client scholarly tutor:', err);
       
-      const getClientReply = (promptText: string) => {
-        const p = promptText.toLowerCase();
-        if (p.includes('oxford comma') || p.includes('serial comma')) {
-          return `### The Oxford (Serial) Comma
-The Oxford comma is the comma placed immediately before the coordinating conjunction (such as **and** or **or**) in a list of three or more items.
-
-**Why It Matters:**
-Without it, sentences can create humorous or bewildering misunderstandings!
-
-- **Confusing:** *We invited the scholars, William Shakespeare and the Venerable Abbot.* (This might suggest the scholars ARE Shakespeare and the Abbot!)
-- **Clear with Oxford Comma:** *We invited the scholars, William Shakespeare, and the Venerable Abbot.*
-
-**Golden Rule:** At the Sanjanani English Corner, we recommend the Oxford comma for unambiguous academic and literary prose.`;
-        }
-
-        if (p.includes('active') || p.includes('passive') || p.includes('voice')) {
-          return `### Active vs. Passive Voice Masterclass
-
-**Active Voice (Subject Drives Action):**
-- *Structure:* Subject + Verb + Object
-- *Example:* *The novice scholar translated the palm-leaf manuscript.*
-- *Benefit:* Muscular, direct, and immediate.
-
-**Passive Voice (Action Befalls Object):**
-- *Structure:* Object + Auxiliary Verb + Past Participle (+ by Subject)
-- *Example:* *The palm-leaf manuscript was translated by the novice scholar.*
-- *Benefit:* Objective or diplomatic focus when the actor is secondary.
-
-**Rule of Thumb:** Strive for around 85% active voice in your essays and stories at Sanjanani 2026!`;
-        }
-
-        if (p.includes('hamlet') || p.includes('to be or not to be')) {
-          return `### Analysis of Hamlet's Soliloquy ("To be, or not to be")
-Prince Hamlet speaks this immortal soliloquy in **Act III, Scene 1** of Shakespeare's tragedy.
-
-**Core Themes:**
-1. **Existential Burden:** Weighing whether it is nobler to endure the slings and arrows of outrageous fortune or take arms against a sea of troubles.
-2. **Fear of the Unknown:** The "undiscovered country from whose bourn no traveller returns" paralyzes decisive action.
-3. **Conscience & Reason:** Intense metaphysical contemplation arrests the will: *"Thus conscience does make cowards of us all."*`;
-        }
-
-        if (p.includes('each of') || p.includes('sentence') || p.includes('check') || p.includes('mistake')) {
-          return `### Sentence Surgery: "Each of the monks have a book"
-- **Correction:** *Each of the monks **has** a book.*
-- **Syntactic Rule:** The head subject is **"Each"**, which is a singular distributive pronoun. Even though *"of the monks"* contains a plural noun, the main verb must agree with the singular pronoun **Each**.
-
-Keep sending sentences to examine their grammar and elevate their vocabulary!`;
-        }
-
-        if (p.includes('sinhala') || p.includes('sri lanka') || p.includes('origin') || p.includes('loanword')) {
-          return `### English Words with Roots in Sri Lanka & Sinhala
-1. **Serendipity:** From *Serendib*, the historic name for Sri Lanka, coined by Horace Walpole in 1754.
-2. **Tourmaline:** From the Sinhala *Thoramalli (තෝරමල්ලි)* for precious gemstones.
-3. **Catamaran:** From Tamil *Kattu-maram* (tied logs).
-4. **Mulligatawny:** From *Milagu-tannir* (pepper water), renowned Ceylon soup.
-5. **Bungalow:** Domestic architecture widespread across Kandy's tea hills.`;
-        }
-
-        if (p.includes('mist') || p.includes('kandy') || p.includes('adjective')) {
-          return `### 5 Elevated Literary Adjectives for Kandy's Morning Mist:
-1. **Gossamer:** Whispering, ultra-delicate and ethereal.
-2. **Cerulean-veiled:** Softly blending with the early mountain azure.
-3. **Vespertine / Matutinal:** Belonging specifically to the early dawn stillness.
-4. **Enshrouded:** Cloaked in quiet, contemplative obscurity.
-5. **Numinous:** Evoking a spiritual, awe-inspiring presence appropriate for Asgiri Pirivena.`;
-        }
-
-        return `### Scholar's Note on: "${promptText}"
-In English prose and poetry, syntactic discipline and vivid word choice are key. 
-Remember that strong verbs carry the emotional momentum of your piece, while clean punctuation prevents syntactic ambiguity.
-
-*Feel free to select one of the suggested chips below or ask another question!*`;
-      };
-
+      const scholarData = generateScholarResponse(text);
       const fallbackMsg: ChatMessage = {
         id: `ast-${Date.now()}`,
         role: 'assistant',
-        content: getClientReply(text),
+        content: scholarData.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages(prev => [...prev, fallbackMsg]);

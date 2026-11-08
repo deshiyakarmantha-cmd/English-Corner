@@ -6,13 +6,13 @@
   "scripts": {
     "dev": "tsx server.ts",
     "start": "node server.ts",
-    "build": "vite build --emptyOutDir && rm -rf docs && mkdir -p docs assets && cp -r dist/* docs/ && cp dist/.nojekyll docs/ 2>/dev/null || true && cp -r dist/assets/* assets/ 2>/dev/null || true && cp -r dist/images assets/ 2>/dev/null || true",
+    "build": "vite build --emptyOutDir",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@google/genai": "^2.4.0",
+    "@google/genai": "^2.32.0",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.1",
     "canvas-confetti": "^1.9.4",

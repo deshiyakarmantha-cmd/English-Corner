@@ -11,6 +11,7 @@ interface SafeImageProps {
 /**
  * Robust image component that guarantees rendering on GitHub Pages, Netlify,
  * subpath repositories, or local environments by trying multiple resolution strategies.
+ * Filters out unbundled /src/ paths to prevent browser 404 console errors.
  */
 export const SafeImage: React.FC<SafeImageProps> = ({
   src,
@@ -21,16 +22,17 @@ export const SafeImage: React.FC<SafeImageProps> = ({
 }) => {
   const [currentSrcIndex, setCurrentSrcIndex] = useState(0);
 
-  // Candidate path strategies for GitHub Pages subpath vs root deployment
+  // Candidate path strategies for GitHub Pages root, subpath, and Netlify deployment
   const candidatePaths = [
-    src,
-    `./images/${fallbackName}`,
-    `images/${fallbackName}`,
-    `./assets/images/${fallbackName}`,
+    src && !src.startsWith('/src/') ? src : null,
     `./assets/${fallbackName}`,
-    `/images/${fallbackName}`,
+    `./assets/images/${fallbackName}`,
+    `./images/${fallbackName}`,
+    `assets/${fallbackName}`,
+    `images/${fallbackName}`,
     `/assets/${fallbackName}`,
-  ];
+    `/images/${fallbackName}`,
+  ].filter(Boolean) as string[];
 
   const handleError = () => {
     if (currentSrcIndex < candidatePaths.length - 1) {
@@ -40,7 +42,7 @@ export const SafeImage: React.FC<SafeImageProps> = ({
 
   return (
     <img
-      src={candidatePaths[currentSrcIndex]}
+      src={candidatePaths[currentSrcIndex] || `./assets/${fallbackName}`}
       alt={alt}
       loading={loading}
       onError={handleError}

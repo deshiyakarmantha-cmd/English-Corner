@@ -13,8 +13,25 @@
     <link rel="alternate icon" href="./favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <script type="module" crossorigin src="./assets/index.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index.css">
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Seamless fallback for GitHub Pages root deployment where /src/main.tsx is not transpiled
+      window.addEventListener('error', function(e) {
+        if (e.target && e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('main.tsx')) {
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.crossOrigin = 'anonymous';
+          link.href = './assets/index.css';
+          document.head.appendChild(link);
+
+          var s = document.createElement('script');
+          s.type = 'module';
+          s.crossOrigin = 'anonymous';
+          s.src = './assets/index.js';
+          document.body.appendChild(s);
+        }
+      }, true);
+    </script>
   </head>
   <body class="bg-[#FAF8F5] text-stone-900 antialiased selection:bg-amber-800/20 selection:text-amber-950 font-sans">
     <div id="root"></div>

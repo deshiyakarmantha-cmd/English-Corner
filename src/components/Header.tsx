@@ -39,6 +39,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCertificate, onOpenAiTutor
             <a href="#shakespeare" className="hover:text-amber-900 transition-colors">
               Shakespeare Review
             </a>
+            <a href="#trivia" className="hover:text-amber-900 transition-colors">
+              Daily Trivia
+            </a>
             <a href="#activities" className="hover:text-amber-900 transition-colors">
               Activities
             </a>
@@ -112,6 +115,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCertificate, onOpenAiTutor
               className="py-2 hover:text-amber-900 border-b border-stone-100"
             >
               Shakespeare Review
+            </a>
+            <a 
+              href="#trivia" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2 hover:text-amber-900 border-b border-stone-100"
+            >
+              Daily Literary Trivia
             </a>
             <a 
               href="#activities" 

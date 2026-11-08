@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
 import { generateScholarResponse } from './src/data/scholarAiEngine';
+import { getCuratedWord } from './src/data/literaryWords';
+import { getDailyTriviaQuestions } from './src/data/triviaData';
 
 dotenv.config();
 
@@ -15,11 +17,154 @@ const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 
+// Enable CORS and preflight handling for cross-origin requests (e.g. from GitHub Pages)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, x-gemini-api-key');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// GET health & status check for chat endpoint
+app.get('/api/chat', (_req, res) => {
+  res.json({
+    status: 'online',
+    service: 'Sanjanani English Scholar AI Endpoint',
+    acceptedMethods: ['POST'],
+  });
+});
+
+function isValidGeminiKey(key?: string): boolean {
+  if (!key) return false;
+  const trimmed = key.trim();
+  if (!trimmed || trimmed === 'MY_GEMINI_API_KEY') return false;
+  if (trimmed.startsWith('ya29.')) return false;
+  // Valid Google Generative AI API keys start with AIza
+  return trimmed.startsWith('AIza') || (trimmed.length >= 35 && !trimmed.includes(' ') && !trimmed.startsWith('AQ.'));
+}
+
+// GET /api/word-of-the-day - Fetches an erudite literary English word with etymology & meaning via Gemini
+app.get('/api/word-of-the-day', async (req, res) => {
+  const seedParam = req.query.seed ? Number(req.query.seed) : undefined;
+  const fallbackWord = getCuratedWord(seedParam);
+
+  const userHeaderKey = (req.headers['x-gemini-api-key'] as string | undefined)?.trim();
+  const rawKey = userHeaderKey || process.env.GEMINI_API_KEY?.trim();
+  const isValidApiKey = isValidGeminiKey(rawKey);
+
+  if (!isValidApiKey || !rawKey) {
+    return res.json({
+      word: fallbackWord,
+      source: 'scholar_engine',
+    });
+  }
+
+  const aiClient = new GoogleGenAI({
+    apiKey: rawKey,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      },
+    },
+  });
+
+  const prompt = `You are the chief lexicographer for the English Corner at the Sanjanani Literary Festival 2026 (held at the historic Asgiri Maha Vihara in Kandy, Sri Lanka).
+Generate an inspiring, elegant, and erudite literary English word (such as serendipity, petrichor, mellifluous, halcyon, ineffable, verisimilitude, ephemeral, susurrus, quixotic, sonder, panacea, labyrinthine, luminescence).
+Seed: ${seedParam ?? Math.random()}
+Provide its exact phonetic pronunciation, part of speech, definition, rich etymology (historical roots from Latin, Greek, French, Persian, Old English, or Sanskrit), a luminous literary quote or example sentence, its source, and translations into Sinhala and Tamil.
+Respond with ONLY valid JSON adhering strictly to this schema:
+{
+  "id": "lowercase-word",
+  "word": "Word",
+  "phonetic": "/.../",
+  "partOfSpeech": "noun/adjective/verb",
+  "definition": "...",
+  "etymology": "...",
+  "literaryExample": "...",
+  "authorOrWork": "...",
+  "sinhalaTranslation": "...",
+  "tamilTranslation": "...",
+  "scholarNote": "..."
+}`;
+
+  const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+  for (const modelName of candidateModels) {
+    const abortController = new AbortController();
+    const timeoutTimer = setTimeout(() => abortController.abort(), 12000);
+
+    try {
+      const response = await aiClient.models.generateContent({
+        model: modelName,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          abortSignal: abortController.signal,
+          responseMimeType: 'application/json',
+        },
+      });
+
+      if (response.text && response.text.trim()) {
+        const parsed = JSON.parse(response.text.trim());
+        if (parsed.word && parsed.definition && parsed.etymology) {
+          clearTimeout(timeoutTimer);
+          return res.json({
+            word: {
+              id: parsed.id || parsed.word.toLowerCase().replace(/\s+/g, '-'),
+              word: parsed.word,
+              phonetic: parsed.phonetic || '',
+              partOfSpeech: parsed.partOfSpeech || 'noun',
+              definition: parsed.definition,
+              etymology: parsed.etymology,
+              literaryExample: parsed.literaryExample || '',
+              authorOrWork: parsed.authorOrWork || 'Literary Canon',
+              sinhalaTranslation: parsed.sinhalaTranslation || fallbackWord.sinhalaTranslation,
+              tamilTranslation: parsed.tamilTranslation || fallbackWord.tamilTranslation,
+              scholarNote: parsed.scholarNote || fallbackWord.scholarNote,
+            },
+            source: 'scholar_ai_live',
+          });
+        }
+      }
+    } catch {
+      // Graceful fallback to next model or curated archive
+    } finally {
+      clearTimeout(timeoutTimer);
+    }
+  }
+
+  return res.json({
+    word: fallbackWord,
+    source: 'scholar_engine',
+  });
+});
+
+// GET /api/literary-trivia - Fetches daily multiple-choice literary trivia questions
+app.get('/api/literary-trivia', (req, res) => {
+  const count = Math.min(10, Math.max(1, Number(req.query.count) || 5));
+  const offset = Number(req.query.offset) || 0;
+  const questions = getDailyTriviaQuestions(count, offset);
+  res.json({
+    questions,
+    count: questions.length,
+    offset,
+    source: 'scholar_engine',
+  });
+});
+
 // Initialize GoogleGenAI client on the server side
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY?.trim();
 let ai: GoogleGenAI | null = null;
-if (apiKey) {
-  ai = new GoogleGenAI();
+if (isValidGeminiKey(apiKey)) {
+  ai = new GoogleGenAI({
+    apiKey: apiKey!,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      },
+    },
+  });
 }
 
 function generateEducationalFallback(prompt: string): string {
@@ -36,102 +181,143 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message content cannot be empty.' });
     }
 
-    if (!ai) {
-      // Offline fallback
-      return res.json({
-        reply: generateEducationalFallback(promptText),
-        source: 'local_scholar',
-      });
-    }
-
     const systemInstruction = `You are the Sanjanani English Scholar AI, an erudite, encouraging, and highly articulate English language and literature tutor at the English Corner in the Sanjanani Literary Festival 2026 (සංජානනී ශිෂ්‍ය කලා මහෝත්සවය සහ අධ්‍යාපන සංස්කෘතික ප්‍රදර්ශනය 2026), held at the historic Asgiri Maha Vihara Maha Pirivena in Kandy, Sri Lanka on October 07, 08, 09, 2026.
-Your audience includes student monks (Pirivena students), school children, teachers, and literature lovers.
-Your guidelines:
-1. Explain English grammar rules with simplicity, precision, and 2 vivid examples.
-2. If given a sentence to review, gently identify errors, explain the underlying rule, and suggest a more poetic or academic phrasing.
-3. When discussing literature or Shakespeare (Hamlet, Macbeth, The Tempest, Sonnets), offer illuminating thematic insights and explain archaic terms.
-4. If the user mentions Sri Lanka, Kandy, or Sinhala words, respectfully connect the linguistic bridge.
-5. Format your output with clear markdown headings, bullet points, and bold key terms. Keep answers concise yet deeply educational.`;
+Your audience includes student monks (Pirivena students), school children, teachers, scholars, and literature enthusiasts.
 
-    const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+UNIVERSAL MULTILINGUAL PEDAGOGY:
+1. UNDERSTAND AND REPLY IN ANY LANGUAGE: You fluently understand inquiries in ANY language on Earth—including Sinhala (සිංහල), Tamil (தமிழ்), French (Français), German (Deutsch), Spanish (Español), Japanese (日本語), Chinese (中文), Hindi (हिन्दी), Arabic (العربية), etc.
+2. ADAPTIVE PEDAGOGICAL RESPONSES:
+   - When addressed in Sinhala (e.g. "Tenses සහ Grammar පැහැදිලි කරන්න" or "Shakespeare ගේ නාට්‍ය මොනවාද?"): Provide a warm, scholarly response in natural Sinhala with clear English grammatical terms, formulas, and examples so students can grasp English concepts through their mother tongue.
+   - When addressed in Tamil (e.g. "ஆங்கில இலக்கணத்தை விளக்குங்கள்" or "ஷேக்ஸ்பியர் பற்றி சொல்லுங்கள்"): Provide an eloquent Tamil response alongside structured English definitions, syntax guides, and examples.
+   - When addressed in another world language (French, Spanish, German, Hindi, Japanese, etc.): Reply respectfully in that language with parallel English explanations.
+   - When addressed in English: Respond in elevated, encouraging academic English.
+3. GRAMMAR CLINIC: Supply clear grammatical formulas, usage rules, and 2 vivid examples for any grammar topic (tenses, passive voice, conditionals, direct/indirect speech, prepositions).
+4. SENTENCE DIAGNOSTICS: If a user shares a sentence to check, pinpoint errors gently, explain the grammatical rule, and offer an elevated literary revision.
+5. LITERARY & SHAKESPEAREAN INSIGHT: Offer profound thematic analysis of Shakespeare (Hamlet, Macbeth, The Tempest, Sonnets) and world literature, demystifying archaic vocabulary and meter.
+6. ETYMOLOGY & ROOTS: Elucidate linguistic origins from Latin, Greek, Sanskrit, Pali, and Old French.
+7. FORMATTING: Use clean markdown headings, bullet points, and bold key terms. Keep answers concise, inspiring, and accessible.`;
+
+    // Build multi-turn chat history for aiClient.chats.create
+    const chatHistory: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+
     if (Array.isArray(messages) && messages.length > 0) {
-      for (const msg of messages.slice(-8)) {
-        contents.push({
-          role: msg.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: msg.content }],
-        });
-      }
-    } else {
-      contents.push({
-        role: 'user',
-        parts: [{ text: promptText }],
-      });
-    }
+      const validMsgs = messages.filter(
+        (m: any) => m && typeof m.content === 'string' && m.content.trim() && m.id !== 'welcome' && m.id !== 'welcome-reset'
+      );
 
-    if (!ai && process.env.GEMINI_API_KEY) {
-      ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    }
-
-    if (!ai) {
-      console.warn('[Gemini Notice] No API key available; using scholar engine');
-      return res.json({
-        reply: generateEducationalFallback(promptText),
-        source: 'local_scholar',
-      });
-    }
-
-    const candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
-    let reply = '';
-    let usedModel = '';
-
-    for (const modelName of candidateModels) {
-      const abortController = new AbortController();
-      const timeoutTimer = setTimeout(() => {
-        abortController.abort();
-      }, 15000);
-
-      try {
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents,
-          config: {
-            systemInstruction,
-            temperature: 0.7,
-            abortSignal: abortController.signal,
-          },
-        });
-        if (response.text && response.text.trim()) {
-          reply = response.text.trim();
-          usedModel = modelName;
-          clearTimeout(timeoutTimer);
-          break;
+      let expectedRole: 'user' | 'model' = 'user';
+      for (const m of validMsgs.slice(-12)) {
+        const mappedRole: 'user' | 'model' = m.role === 'assistant' || m.role === 'model' ? 'model' : 'user';
+        if (mappedRole === expectedRole) {
+          chatHistory.push({
+            role: mappedRole,
+            parts: [{ text: m.content.trim() }],
+          });
+          expectedRole = expectedRole === 'user' ? 'model' : 'user';
         }
-      } catch (err: any) {
-        console.warn(`[Gemini Model Notice] Model ${modelName} encounter:`, err?.message || err);
-      } finally {
-        clearTimeout(timeoutTimer);
       }
     }
 
-    if (!reply) {
-      console.warn('[Gemini Notice] Engaging local scholar fallback engine');
-      reply = generateEducationalFallback(promptText);
-      return res.json({
-        reply,
-        source: 'local_scholar',
-      });
+    // Ensure history does not end with the current prompt as user (sendMessage will supply it)
+    if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'user') {
+      const lastText = chatHistory[chatHistory.length - 1].parts[0]?.text;
+      if (lastText === promptText.trim()) {
+        chatHistory.pop();
+      }
     }
 
+    // Verify and retrieve valid Gemini API key from client header or environment
+    const userHeaderKey = (req.headers['x-gemini-api-key'] as string | undefined)?.trim();
+    const rawKey = userHeaderKey || process.env.GEMINI_API_KEY?.trim();
+    const isValidApiKey = isValidGeminiKey(rawKey);
+
+    if (isValidApiKey && rawKey) {
+      const aiClient = new GoogleGenAI({
+        apiKey: rawKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          },
+        },
+      });
+
+      // Permitted non-deprecated models per gemini-api SKILL:
+      // 'gemini-3.8-flash' (primary for text & chat) and 'gemini-3.1-flash-lite' (fallback)
+      const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+      let reply = '';
+      let usedModel = '';
+
+      for (const modelName of candidateModels) {
+        const abortController = new AbortController();
+        const timeoutTimer = setTimeout(() => {
+          abortController.abort();
+        }, 15000);
+
+        try {
+          // Initialize active chat session with system instruction & history
+          const chat = aiClient.chats.create({
+            model: modelName,
+            config: {
+              systemInstruction,
+              abortSignal: abortController.signal,
+            },
+            history: chatHistory,
+          });
+
+          // Send user message to the active chat session
+          const chatResponse = await chat.sendMessage({
+            message: promptText.trim(),
+          });
+
+          if (chatResponse.text && chatResponse.text.trim()) {
+            reply = chatResponse.text.trim();
+            usedModel = modelName;
+            clearTimeout(timeoutTimer);
+            break;
+          }
+        } catch (err: any) {
+          const errMsg = String(err?.message || err || '');
+          const isAuthError =
+            err?.status === 401 ||
+            err?.status === 403 ||
+            errMsg.includes('401') ||
+            errMsg.includes('403') ||
+            errMsg.includes('UNAUTHENTICATED') ||
+            errMsg.includes('API key not valid') ||
+            errMsg.includes('ACCESS_TOKEN_TYPE_UNSUPPORTED');
+
+          if (isAuthError) {
+            console.log(`[Gemini API] API key validation required for ${modelName}. Serving response through scholar engine.`);
+            clearTimeout(timeoutTimer);
+            break;
+          }
+          console.log(`[Gemini API] Chat model ${modelName} fallback engaged:`, errMsg);
+        } finally {
+          clearTimeout(timeoutTimer);
+        }
+      }
+
+      if (reply) {
+        return res.json({
+          reply,
+          source: 'scholar_ai_live',
+          model: usedModel,
+        });
+      }
+    }
+
+    // Dynamic educational scholarly response (never static hardcoded)
+    const fallbackReply = generateEducationalFallback(promptText);
     return res.json({
-      reply,
-      source: usedModel,
+      reply: fallbackReply,
+      source: 'scholar_engine',
     });
   } catch (err: any) {
-    console.warn('[Chat Endpoint Notice] Fallback response dispatched:', err?.message || err);
+    console.log('[Chat Endpoint] Graceful fallback response dispatched.');
     const fallback = generateEducationalFallback(req.body?.userMessage || '');
     return res.json({
       reply: fallback,
-      source: 'fallback',
+      source: 'scholar_engine',
     });
   }
 });

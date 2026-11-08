@@ -11,48 +11,93 @@ import {
   RotateCcw, 
   BookOpen, 
   Feather,
-  Loader2
+  Loader2,
+  Languages,
+  ArrowRight
 } from 'lucide-react';
 import { generateScholarResponse } from '../data/scholarAiEngine';
 
-interface ChatMessage {
+export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  source?: string;
+  model?: string;
 }
 
-const PRESET_PROMPTS = [
-  'Check my sentence: "Each of the monks have a book"',
-  'Explain the Oxford Comma with examples',
-  'How do I convert Passive Voice into Active Voice?',
-  'Analyze Hamlet’s "To be or not to be" soliloquy',
-  'What English words originated from Sinhala or Sri Lanka?',
-  'Explain Iambic Pentameter with da-DUM meter',
-  'Give me 6 literary adjectives for Kandy’s morning mist',
-  'When and where is Sanjanani Festival 2026?'
+const MULTILINGUAL_STARTERS = [
+  {
+    lang: 'සිංහල (Sinhala)',
+    prompt: 'Tenses සහ කාල භේදය සිංහලෙන් සරලව පැහැදිලි කරන්න',
+    desc: 'ක්‍රියාපද කාල භේදය සහ ව්‍යාකරණ රීති',
+  },
+  {
+    lang: 'தமிழ் (Tamil)',
+    prompt: 'ஆங்கில இலக்கணத்தை தமிழில் எளிமையாக விளக்குங்கள்',
+    desc: 'காலங்கள் மற்றும் வாக்கிய அமைப்பு',
+  },
+  {
+    lang: 'Grammar Clinic',
+    prompt: 'Check my sentence: "Each of the monks have a book"',
+    desc: 'Subject-verb agreement & syntax check',
+  },
+  {
+    lang: 'Shakespeare',
+    prompt: 'Analyze Hamlet’s "To be or not to be" soliloquy in detail',
+    desc: 'Dramatic themes & poetic meter analysis',
+  },
+  {
+    lang: 'Français',
+    prompt: 'Comment utiliser la voix passive en anglais académique ?',
+    desc: 'Syntaxe et voix passive en anglais',
+  },
+  {
+    lang: 'Vocabulary',
+    prompt: 'Give me 5 evocative literary adjectives for a rainy morning in Kandy',
+    desc: 'Advanced descriptive vocabulary for essays',
+  },
+  {
+    lang: 'Essay Blueprint',
+    prompt: 'How to structure a high-scoring literature essay using PEEL formula',
+    desc: 'Point, Evidence, Explanation, Link framework',
+  },
+  {
+    lang: 'Etymology',
+    prompt: 'What English words originated from Sinhala or Sri Lanka?',
+    desc: 'Serendipity, Cinnamon, Tourmaline & Teak',
+  },
 ];
 
 interface AiEnglishTutorProps {
   isOpen: boolean;
   onClose: () => void;
   onOpen: () => void;
+  initialPrompt?: string;
 }
 
-export const AiEnglishTutor: React.FC<AiEnglishTutorProps> = ({ isOpen, onClose, onOpen }) => {
+export const AiEnglishTutor: React.FC<AiEnglishTutorProps> = ({ 
+  isOpen, 
+  onClose, 
+  onOpen, 
+  initialPrompt 
+}) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
       role: 'assistant',
-      content: `### Welcome to the English Scholar AI! 
-I am your personal learning tutor at the **English Corner** for the **Sanjanani Literary Festival 2026** at Asgiri Maha Vihara Maha Pirivena, Kandy (October 07, 08, 09).
+      content: `### Welcome to the Sanjanani English Scholar AI
+I am your multilingual academic learning tutor at **The English Corner** for the **Sanjanani Literary Festival 2026** at the historic Asgiri Maha Vihara in Kandy (October 07, 08, 09, 2026).
 
-How may I assist your English studies today?
-- Ask a grammar question (tenses, clauses, prepositions)
-- Request a sentence check or vocabulary elevation
-- Explore Shakespearean drama and sonnet metrics
-- Learn loanwords and linguistic nuances!`,
+🌍 **Universal Multilingual Chat Session:**
+You may converse in **any language** of your preference:
+- **සිංහල (Sinhala):** ඕනෑම ඉංග්‍රීසි ව්‍යාකරණ, වාක්‍ය රීති, කාල භේදය හෝ ශේක්ස්පියර් නාට්‍ය පිළිබඳව සිංහලෙන් විමසන්න.
+- **தமிழ் (Tamil):** ஆங்கில இலக்கணம், வாக்கிய அமைப்பு மற்றும் இலக்கிய வினாக்களைத் தமிழில் கேட்கலாம்.
+- **English & Global Tongues:** Sentence diagnostics, grammar clinics, essay composition, and literary analyses in English, French, Spanish, German, Japanese, etc.
+
+*How may I assist your literary and linguistic studies today?*`,
       timestamp: 'Festival Desk',
+      source: 'scholar_ai_live',
     },
   ]);
 
@@ -67,6 +112,12 @@ How may I assist your English studies today?
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOpen]);
+
+  useEffect(() => {
+    if (initialPrompt) {
+      setInput(initialPrompt);
+    }
+  }, [initialPrompt]);
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || input).trim();
@@ -83,41 +134,55 @@ How may I assist your English studies today?
     setInput('');
     setIsLoading(true);
 
+    // Multi-turn chat session payload sent to backend Google Generative AI handler
+    const payload = {
+      userMessage: text,
+      messages: [...messages, userMsg].map(m => ({
+        role: m.role,
+        content: m.content,
+      })),
+    };
+
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userMessage: text,
-          messages: [...messages, userMsg].map(m => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
+        throw new Error(`Server returned HTTP ${response.status}`);
       }
 
       const data = await response.json();
       const assistantMsg: ChatMessage = {
         id: `ast-${Date.now()}`,
         role: 'assistant',
-        content: data.reply || 'I am reflecting upon your query. Could you please ask again?',
+        content: data.reply || 'I am reflecting upon your query. Could you please rephrase or ask again?',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        source: data.source || 'gemini_chat_session',
+        model: data.model,
       };
 
       setMessages(prev => [...prev, assistantMsg]);
-    } catch (err: any) {
-      console.warn('Network chat API unavailable, engaging client scholarly tutor:', err);
-      
+    } catch {
+      // Dynamic scholarly response fallback ensuring no dead ends or generic crashes
       const scholarData = generateScholarResponse(text);
       const fallbackMsg: ChatMessage = {
         id: `ast-${Date.now()}`,
         role: 'assistant',
         content: scholarData.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        source: 'scholar_engine',
       };
       setMessages(prev => [...prev, fallbackMsg]);
     } finally {
@@ -135,8 +200,11 @@ How may I assist your English studies today?
     }
 
     window.speechSynthesis.cancel();
-    // Clean markdown headings/symbols for speech
-    const cleanText = msg.content.replace(/[#*`_~]/g, '');
+    // Strip markdown formatting symbols for natural vocal enunciation
+    const cleanText = msg.content
+      .replace(/[#*`_~>]/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.rate = 0.92;
     utterance.onend = () => setSpeakingId(null);
@@ -157,8 +225,9 @@ How may I assist your English studies today?
       {
         id: 'welcome-reset',
         role: 'assistant',
-        content: 'Conversation cleared. What English topic would you like to explore next?',
+        content: 'Conversation session refreshed. What literary topic, grammar principle, or multilingual inquiry would you like to explore next?',
         timestamp: 'Festival Desk',
+        source: 'scholar_ai_live',
       },
     ]);
   };
@@ -169,60 +238,72 @@ How may I assist your English studies today?
       {!isOpen && (
         <button
           onClick={onOpen}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 bg-amber-950 text-white rounded-full shadow-xl hover:bg-amber-900 transition-all hover:scale-105 border-2 border-amber-400/50 group"
-          title="Open AI English Learning Tutor"
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 bg-stone-900 text-white rounded-full shadow-xl hover:bg-amber-950 transition-all hover:scale-105 border border-amber-500/40 cursor-pointer"
+          title="Open Sanjanani English Scholar AI Tutor"
         >
           <div className="relative">
             <Feather className="w-5 h-5 text-amber-300" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full" />
           </div>
           <div className="text-left pr-1">
-            <span className="text-xs font-bold block leading-tight">AI English Tutor</span>
-            <span className="text-[10px] text-amber-200 block font-mono">Learn & Practice</span>
+            <span className="text-xs font-bold block leading-tight font-serif text-white">
+              Scholar AI Tutor
+            </span>
+            <span className="text-[10px] text-amber-200/90 block font-mono">
+              Multilingual · 2026
+            </span>
           </div>
         </button>
       )}
 
       {/* Slide-over Drawer / Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-xs flex justify-end">
-          <div className="w-full max-w-lg bg-[#FAF8F5] text-stone-900 h-full flex flex-col shadow-2xl border-l border-stone-300 animate-slideLeft">
+        <div className="fixed inset-0 z-50 overflow-hidden bg-black/45 backdrop-blur-xs flex justify-end">
+          <div className="w-full max-w-xl bg-[#FAF8F5] text-stone-900 h-full flex flex-col shadow-2xl border-l border-stone-300 animate-slideLeft">
             
-            {/* Header */}
-            <div className="p-4 sm:p-5 bg-stone-900 text-stone-100 flex items-center justify-between border-b border-stone-800">
+            {/* Academic Header */}
+            <div className="p-4 sm:p-5 bg-stone-900 text-stone-100 flex items-center justify-between border-b border-stone-800 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-950 border border-amber-400/40 flex items-center justify-center shadow-inner">
-                  <Feather className="w-5 h-5 text-amber-300" />
+                <div className="w-10 h-10 rounded-xl bg-amber-950/80 border border-amber-400/40 flex items-center justify-center shadow-inner text-amber-300">
+                  <Feather className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-serif font-bold text-base text-white flex items-center gap-1.5">
+                  <h3 className="font-serif font-bold text-base text-white flex items-center gap-2">
                     <span>Sanjanani English Scholar AI</span>
-                    <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 bg-amber-900/80 text-amber-200 rounded-sm">
-                      Tutor
-                    </span>
                   </h3>
-                  <p className="text-[11px] text-stone-400">
-                    English Corner · Asgiri Maha Vihara (Oct 07–09, 2026)
-                  </p>
+                  <div className="flex items-center gap-2 text-[11px] text-stone-400 font-sans mt-0.5">
+                    <span>English Corner</span>
+                    <span aria-hidden="true">·</span>
+                    <span>Asgiri Maha Vihara (Oct 07–09, 2026)</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={handleClearHistory}
-                  className="p-1.5 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800"
-                  title="Clear Conversation"
+                  className="p-1.5 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800 transition-colors cursor-pointer"
+                  title="Clear Chat Session"
+                  aria-label="Clear chat session"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
                 <button
                   onClick={onClose}
-                  className="p-1.5 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800"
-                  aria-label="Close tutor"
+                  className="p-1.5 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800 transition-colors cursor-pointer"
+                  aria-label="Close tutor modal"
                 >
                   <X className="w-5 h-5" />
                 </button>
+              </div>
+            </div>
+
+            {/* Multilingual Support Banner */}
+            <div className="px-4 py-2 bg-[#F3ECE1] border-b border-stone-200/90 flex items-center justify-between text-[11px] text-stone-700">
+              <div className="flex items-center gap-1.5">
+                <Languages className="w-3.5 h-3.5 text-amber-900" />
+                <span className="font-medium text-stone-900">Multilingual Chat Session Active:</span>
+                <span className="text-stone-600">සිංහල, தமிழ், English, Français & World Tongues</span>
               </div>
             </div>
 
@@ -235,36 +316,40 @@ How may I assist your English studies today?
                     key={msg.id}
                     className={`flex flex-col ${isAssistant ? 'items-start' : 'items-end'}`}
                   >
+                    {/* Message Meta Info */}
                     <div className="flex items-center gap-2 mb-1 text-[11px] text-stone-500 font-mono">
-                      <span>{isAssistant ? 'Scholar AI' : 'Participant'}</span>
-                      <span>·</span>
+                      <span className="font-semibold text-stone-700">
+                        {isAssistant ? 'Scholar AI Tutor' : 'Participant'}
+                      </span>
+                      <span aria-hidden="true">·</span>
                       <span>{msg.timestamp}</span>
                     </div>
 
+                    {/* Message Bubble */}
                     <div
-                      className={`max-w-[90%] sm:max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed shadow-xs ${
+                      className={`max-w-[92%] sm:max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed shadow-xs ${
                         isAssistant
-                          ? 'bg-white border border-stone-200/90 text-stone-800 rounded-tl-xs'
-                          : 'bg-amber-950 text-white rounded-tr-xs'
+                          ? 'bg-white border border-stone-200 text-stone-800 rounded-tl-xs'
+                          : 'bg-stone-900 text-white rounded-tr-xs'
                       }`}
                     >
-                      {/* Formatted Text rendering */}
+                      {/* Markdown Text Formatting */}
                       <div className="space-y-2 whitespace-pre-wrap font-sans">
                         {msg.content}
                       </div>
 
-                      {/* Action tools for Assistant Message */}
+                      {/* Tool Actions for Scholar AI response */}
                       {isAssistant && (
-                        <div className="mt-3 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
+                        <div className="mt-3 pt-2.5 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
                           <button
                             onClick={() => handleSpeak(msg)}
-                            className="inline-flex items-center gap-1 hover:text-amber-900 transition-colors"
-                            title="Listen to English speech"
+                            className="inline-flex items-center gap-1 text-stone-600 hover:text-amber-900 transition-colors cursor-pointer"
+                            title="Pronounce response with vocal enunciation"
                           >
                             {speakingId === msg.id ? (
                               <>
                                 <VolumeX className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
-                                <span className="text-rose-600">Stop Voice</span>
+                                <span className="text-rose-600 font-medium">Stop Speech</span>
                               </>
                             ) : (
                               <>
@@ -276,17 +361,18 @@ How may I assist your English studies today?
 
                           <button
                             onClick={() => handleCopy(msg.id, msg.content)}
-                            className="inline-flex items-center gap-1 hover:text-stone-900 transition-colors"
+                            className="inline-flex items-center gap-1 text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
+                            title="Copy response text"
                           >
                             {copiedId === msg.id ? (
                               <>
                                 <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                <span className="text-emerald-700">Copied!</span>
+                                <span className="text-emerald-700 font-medium">Copied!</span>
                               </>
                             ) : (
                               <>
                                 <Copy className="w-3.5 h-3.5" />
-                                <span>Copy</span>
+                                <span>Copy Text</span>
                               </>
                             )}
                           </button>
@@ -298,57 +384,63 @@ How may I assist your English studies today?
               })}
 
               {isLoading && (
-                <div className="flex items-center gap-2 p-3 bg-white/80 border border-stone-200 rounded-xl w-fit text-xs text-stone-600">
-                  <Loader2 className="w-4 h-4 text-amber-900 animate-spin" />
-                  <span>The Scholar AI is composing guidance...</span>
+                <div className="flex items-center gap-2 p-3 bg-white border border-stone-200 rounded-xl w-fit text-xs text-stone-700 shadow-xs">
+                  <Loader2 className="w-4 h-4 text-amber-800 animate-spin" />
+                  <span>The Scholar AI is composing pedagogical guidance...</span>
                 </div>
               )}
 
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Suggestion Chips */}
-            <div className="p-3 bg-[#F5EFE6] border-t border-stone-200 overflow-x-auto no-scrollbar">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-950 font-bold block mb-1.5">
-                Suggested Learning Topics:
-              </span>
-              <div className="flex items-center gap-1.5">
-                {PRESET_PROMPTS.map((prompt, idx) => (
+            {/* Quick Inquiries Deck */}
+            <div className="p-3 bg-[#F4EFE6] border-t border-stone-200/90 overflow-x-auto no-scrollbar">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-amber-950 font-bold mb-2">
+                Curated Scholarly Inquiries:
+              </div>
+              <div className="flex items-center gap-2">
+                {MULTILINGUAL_STARTERS.map((item, idx) => (
                   <button
                     key={idx}
-                    onClick={() => handleSendMessage(prompt)}
+                    onClick={() => handleSendMessage(item.prompt)}
                     disabled={isLoading}
-                    className="px-2.5 py-1 bg-white border border-stone-300 rounded-lg text-[11px] text-stone-700 whitespace-nowrap hover:bg-amber-50 hover:border-amber-400 hover:text-amber-950 transition-colors shrink-0 disabled:opacity-50"
+                    className="px-3 py-1.5 bg-white border border-stone-300 hover:border-amber-500 hover:bg-amber-50/60 rounded-xl text-left text-xs transition-colors shrink-0 disabled:opacity-50 cursor-pointer shadow-2xs"
+                    title={item.prompt}
                   >
-                    {prompt}
+                    <div className="font-semibold text-amber-950 text-[11px] leading-tight">
+                      {item.lang}
+                    </div>
+                    <div className="text-stone-500 text-[10px] truncate max-w-[210px]">
+                      {item.desc}
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Input Form */}
+            {/* Message Input Bar */}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSendMessage();
               }}
-              className="p-4 bg-white border-t border-stone-200 flex items-center gap-2"
+              className="p-3.5 sm:p-4 bg-white border-t border-stone-200 flex items-center gap-2 shrink-0"
             >
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask grammar, sentence check, or Shakespeare..."
+                placeholder="Ask in Sinhala, Tamil, English, or any language..."
                 disabled={isLoading}
-                className="flex-1 px-3.5 py-2.5 text-xs bg-stone-50 border border-stone-300 rounded-xl focus:outline-hidden focus:ring-1 focus:ring-amber-900 text-stone-900 placeholder-stone-400"
+                className="flex-1 px-4 py-2.5 text-xs sm:text-sm bg-stone-50 border border-stone-300 rounded-xl focus:outline-hidden focus:ring-1 focus:ring-amber-900 text-stone-900 placeholder-stone-400 font-sans"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="p-2.5 bg-amber-950 text-white rounded-xl hover:bg-amber-900 transition-colors disabled:opacity-40 shadow-xs"
-                aria-label="Send message"
+                className="p-2.5 bg-stone-900 text-white rounded-xl hover:bg-amber-950 transition-colors disabled:opacity-40 shadow-xs cursor-pointer"
+                aria-label="Send message to Scholar AI"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-4 h-4 text-amber-300" />
               </button>
             </form>
 

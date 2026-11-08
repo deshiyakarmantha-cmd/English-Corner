@@ -3,8 +3,13 @@ import { FESTIVAL_METADATA } from '../data/festivalData';
 import { BookOpen, Sparkles, Scroll, Landmark } from 'lucide-react';
 import heroImage from '../assets/images/sanjanani_english_corner_hero_1791314924841.jpg';
 import { SafeImage } from './SafeImage';
+import { WordOfTheDay } from './WordOfTheDay';
 
-export const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  onOpenAiTutor?: (prefillQuery?: string) => void;
+}
+
+export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAiTutor }) => {
   return (
     <section id="pavilion" className="relative pt-8 pb-16 lg:pt-14 lg:pb-24 overflow-hidden border-b border-stone-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -137,6 +142,11 @@ export const HeroSection: React.FC = () => {
             </div>
 
           </div>
+        </div>
+
+        {/* Scholarly Word of the Day & Etymology Showcase */}
+        <div className="mt-12 sm:mt-16">
+          <WordOfTheDay onOpenAiTutor={onOpenAiTutor} />
         </div>
 
       </div>

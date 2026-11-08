@@ -10,27 +10,41 @@ import { FestivalSchedule } from './components/FestivalSchedule';
 import { Footer } from './components/Footer';
 import { CertificateModal } from './components/CertificateModal';
 import { AiEnglishTutor } from './components/AiEnglishTutor';
+import { ReadingProgress } from './components/ReadingProgress';
+import { LiteraryTrivia } from './components/LiteraryTrivia';
 
 export default function App() {
   const [globalCertOpen, setGlobalCertOpen] = useState(false);
   const [aiTutorOpen, setAiTutorOpen] = useState(false);
+  const [aiTutorPrompt, setAiTutorPrompt] = useState<string>('');
   const [recipientName, setRecipientName] = useState('Festival Scholar');
+
+  const handleOpenAiTutor = (prefillPrompt?: string) => {
+    if (prefillPrompt) {
+      setAiTutorPrompt(prefillPrompt);
+    }
+    setAiTutorOpen(true);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-stone-900 selection:bg-amber-800/20 selection:text-amber-950">
+      {/* Top Reading Progress Bar for Literature & Shakespeare sections */}
+      <ReadingProgress />
+
       {/* 3-Zone Top Navigation Contract */}
       <Header 
         onOpenCertificate={() => setGlobalCertOpen(true)} 
-        onOpenAiTutor={() => setAiTutorOpen(true)}
+        onOpenAiTutor={() => handleOpenAiTutor()}
       />
 
       {/* Main Content Sections */}
       <main className="flex-1">
-        <HeroSection />
+        <HeroSection onOpenAiTutor={handleOpenAiTutor} />
         <LanguageSection />
         <GrammarLab />
         <LiteratureSection />
         <ShakespeareReview />
+        <LiteraryTrivia onOpenAiTutor={handleOpenAiTutor} />
         <InteractiveActivities />
         <FestivalSchedule />
       </main>
@@ -43,6 +57,7 @@ export default function App() {
         isOpen={aiTutorOpen} 
         onClose={() => setAiTutorOpen(false)} 
         onOpen={() => setAiTutorOpen(true)} 
+        initialPrompt={aiTutorPrompt}
       />
 
       {/* Global Keepsake Certificate Modal */}

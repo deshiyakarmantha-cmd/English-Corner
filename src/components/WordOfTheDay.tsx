@@ -101,7 +101,7 @@ export const WordOfTheDay: React.FC<WordOfTheDayProps> = ({ onOpenAiTutor }) => 
   };
 
   return (
-    <div className="relative bg-[#FCFAF7] border border-amber-900/15 rounded-2xl p-6 sm:p-8 shadow-xs overflow-hidden transition-all">
+    <div className="relative bg-[#FAF6EE] border-2 border-stone-300/90 rounded-2xl p-6 sm:p-8 shadow-xs overflow-hidden transition-all">
       {/* Antique subtle corner embellishment */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-amber-200/25 via-transparent to-transparent pointer-events-none rounded-tr-2xl" />
 

@@ -249,7 +249,7 @@ export const InteractiveActivities: React.FC = () => {
   };
 
   return (
-    <section id="activities" className="py-16 lg:py-24 border-b border-stone-200 bg-[#FAF8F5]">
+    <section id="activities" className="py-16 lg:py-24 border-b border-stone-300/80 bg-[#F5EFE4]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -315,7 +315,7 @@ export const InteractiveActivities: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
               {/* Left 7 Cols: The Writing Desk */}
-              <div className="lg:col-span-7 bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 shadow-xs">
+              <div className="lg:col-span-7 bg-[#FDFBF7] border border-stone-300/80 rounded-2xl p-6 sm:p-8 shadow-xs">
                 <div className="flex items-center justify-between border-b border-stone-200 pb-4 mb-6">
                   <div>
                     <h3 className="text-xl font-serif font-bold text-stone-900">
@@ -477,21 +477,21 @@ export const InteractiveActivities: React.FC = () => {
                 </div>
 
                 <div className="space-y-3 text-xs">
-                  <div className="p-3 bg-white rounded-xl border border-stone-200">
+                  <div className="p-3 bg-[#FFFDF9] rounded-xl border border-stone-300/80">
                     <div className="font-semibold text-amber-950">1. The Haiku (5-7-5)</div>
                     <p className="text-stone-600 mt-1">
                       Capture an ephemeral moment in nature. Line 1: 5 syllables. Line 2: 7 syllables. Line 3: 5 syllables.
                     </p>
                   </div>
 
-                  <div className="p-3 bg-white rounded-xl border border-stone-200">
+                  <div className="p-3 bg-[#FFFDF9] rounded-xl border border-stone-300/80">
                     <div className="font-semibold text-amber-950">2. The 100-Word Micro-Story</div>
                     <p className="text-stone-600 mt-1">
                       A complete narrative arc (beginning, conflict, resolution) distilled into precisely 100 words or fewer.
                     </p>
                   </div>
 
-                  <div className="p-3 bg-white rounded-xl border border-stone-200">
+                  <div className="p-3 bg-[#FFFDF9] rounded-xl border border-stone-300/80">
                     <div className="font-semibold text-amber-950">3. Monastic Reflection</div>
                     <p className="text-stone-600 mt-1">
                       Contemplate impermanence, compassion, or the meeting of languages in the Kandyan highlands.
@@ -579,7 +579,7 @@ export const InteractiveActivities: React.FC = () => {
 
         {/* ================= ACTIVITY 2: LITERARY & GRAMMAR QUIZ ================= */}
         {activeTab === 'quiz' && (
-          <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-10 shadow-xs">
+          <div className="bg-[#FDFBF7] border border-stone-300/80 rounded-2xl p-6 sm:p-10 shadow-xs">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-6 mb-8">
               <div>
                 <div className="flex items-center gap-2 text-xs font-mono text-amber-900 mb-1">
@@ -723,7 +723,7 @@ export const InteractiveActivities: React.FC = () => {
 
         {/* ================= ACTIVITY 3: SHAKESPEAREAN INSULT & PRAISE GENERATOR ================= */}
         {activeTab === 'generator' && (
-          <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-10 shadow-xs">
+          <div className="bg-[#FDFBF7] border border-stone-300/80 rounded-2xl p-6 sm:p-10 shadow-xs">
             <div className="max-w-2xl mb-8">
               <h3 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
                 The Elizabethan Insult & Praise Generator
@@ -866,7 +866,7 @@ export const InteractiveActivities: React.FC = () => {
 
         {/* ================= ACTIVITY 4: LEXICON ANAGRAM CRUCIBLE ================= */}
         {activeTab === 'crucible' && (
-          <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-10 shadow-xs">
+          <div className="bg-[#FDFBF7] border border-stone-300/80 rounded-2xl p-6 sm:p-10 shadow-xs">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-6 mb-8">
               <div>
                 <h3 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">

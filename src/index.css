@@ -5,18 +5,31 @@
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
 }
 
-/* Custom literary styles and print support */
+/* Enforce authentic monastic parchment palette and prevent washed-out white appearance in web view */
+:root {
+  color-scheme: light;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
+    color-scheme: light;
+    background-color: #F6F1E7;
+    color: #1c1917;
+  }
+  body {
+    background-color: #F6F1E7;
+    color: #1c1917;
+    margin: 0;
+    padding: 0;
   }
 }
 
 .paper-texture {
-  background-color: #faf7f2;
-  background-image: radial-gradient(#d5cbb8 0.75px, transparent 0.75px), radial-gradient(#e8dfcf 0.75px, #faf7f2 0.75px);
-  background-size: 30px 30px;
-  background-position: 0 0, 15px 15px;
+  background-color: #F5EFE4;
+  background-image: radial-gradient(#d3c6ae 0.8px, transparent 0.8px), radial-gradient(#e4d8c2 0.8px, #F5EFE4 0.8px);
+  background-size: 28px 28px;
+  background-position: 0 0, 14px 14px;
 }
 
 .parchment-border {

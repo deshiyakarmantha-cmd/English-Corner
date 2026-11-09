@@ -22,7 +22,7 @@ export const LanguageSection: React.FC = () => {
   });
 
   return (
-    <section id="language" className="py-16 lg:py-24 border-b border-stone-200 bg-[#FCFAF7]">
+    <section id="language" className="py-16 lg:py-24 border-b border-stone-300/80 bg-[#F5EFE4]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -44,7 +44,7 @@ export const LanguageSection: React.FC = () => {
           {ENGLISH_LANGUAGE_FACTS.map((fact, idx) => (
             <div 
               key={idx}
-              className="p-6 bg-white border border-stone-200/90 rounded-2xl shadow-xs hover:border-amber-900/30 transition-colors flex flex-col justify-between"
+              className="p-6 bg-[#FDFBF7] border border-stone-300/80 rounded-2xl shadow-xs hover:border-amber-900/40 transition-colors flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-3 text-xs">
@@ -82,7 +82,7 @@ export const LanguageSection: React.FC = () => {
 
             {/* Filter Tabs & Search Bar */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <div className="flex items-center gap-1 p-1 bg-white/70 border border-stone-300 rounded-lg">
+              <div className="flex items-center gap-1 p-1 bg-[#FAF5EB] border border-stone-300 rounded-lg">
                 <button
                   onClick={() => setActiveOrigin('all')}
                   className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
@@ -116,7 +116,7 @@ export const LanguageSection: React.FC = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Filter words or origins..."
-                  className="pl-9 pr-3 py-1.5 text-xs bg-white border border-stone-300 rounded-lg text-stone-800 placeholder-stone-400 focus:outline-hidden focus:ring-1 focus:ring-amber-900 w-full sm:w-48"
+                  className="pl-9 pr-3 py-1.5 text-xs bg-[#FFFDF9] border border-stone-300 rounded-lg text-stone-800 placeholder-stone-400 focus:outline-hidden focus:ring-1 focus:ring-amber-900 w-full sm:w-48"
                 />
               </div>
             </div>
@@ -127,7 +127,7 @@ export const LanguageSection: React.FC = () => {
             {filteredWords.map((item, idx) => (
               <div 
                 key={idx}
-                className="p-4 bg-white/95 border border-stone-200/80 rounded-xl hover:shadow-xs transition-shadow"
+                className="p-4 bg-[#FDFBF7] border border-stone-300/80 rounded-xl hover:shadow-xs transition-shadow"
               >
                 <div className="flex items-baseline justify-between mb-1">
                   <h4 className="text-base font-serif font-bold text-amber-950">

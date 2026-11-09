@@ -148,7 +148,7 @@ export const LiteraryTrivia: React.FC<LiteraryTriviaProps> = ({ onOpenAiTutor })
   const rank = getRankBadge(score, questions.length);
 
   return (
-    <section id="trivia" className="py-16 lg:py-24 border-b border-stone-200 bg-[#FAF7F2]">
+    <section id="trivia" className="py-16 lg:py-24 border-b border-stone-300/80 bg-[#F5EFE4]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -166,7 +166,7 @@ export const LiteraryTrivia: React.FC<LiteraryTriviaProps> = ({ onOpenAiTutor })
         </div>
 
         {/* Global Statistics Ribbon */}
-        <div className="mb-8 p-4 bg-white/90 border border-stone-200/90 rounded-2xl shadow-2xs flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+        <div className="mb-8 p-4 bg-[#FDFBF7] border border-stone-300/80 rounded-2xl shadow-2xs flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
           <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
             <div className="flex items-center gap-1.5 text-stone-700">
               <BookOpen className="w-4 h-4 text-amber-800" />
@@ -244,7 +244,7 @@ export const LiteraryTrivia: React.FC<LiteraryTriviaProps> = ({ onOpenAiTutor })
               {/* Multiple Choice Options Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-6" role="radiogroup">
                 {currentQ.options.map((option, idx) => {
-                  let btnStyle = 'bg-white hover:bg-stone-50 border-stone-200/90 text-stone-800';
+                  let btnStyle = 'bg-[#FDFBF7] hover:bg-amber-50/50 border-stone-300/80 text-stone-800';
                   let icon = null;
 
                   if (isAnswered) {
@@ -355,7 +355,7 @@ export const LiteraryTrivia: React.FC<LiteraryTriviaProps> = ({ onOpenAiTutor })
               </div>
 
               {/* Review List */}
-              <div className="max-w-xl mx-auto text-left bg-white border border-stone-200 rounded-xl p-4 divide-y divide-stone-100 text-xs">
+              <div className="max-w-xl mx-auto text-left bg-[#FAF6EE] border border-stone-300/80 rounded-xl p-4 divide-y divide-stone-200/60 text-xs">
                 {questions.map((q, idx) => (
                   <div key={q.id} className="py-2.5 first:pt-0 last:pb-0 flex items-start gap-2.5">
                     <span className="font-bold font-mono text-stone-400 mt-0.5">{idx + 1}.</span>

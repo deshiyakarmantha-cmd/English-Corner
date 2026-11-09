@@ -112,7 +112,7 @@ export const ReadingProgress: React.FC = () => {
 
       {/* 2. Micro Companion Status Bar when reading through Literature & Shakespeare */}
       <div 
-        className={`fixed top-20 left-0 right-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-amber-900/10 transition-all duration-300 transform ${
+        className={`fixed top-20 left-0 right-0 z-40 bg-[#FAF6EE]/95 backdrop-blur-md border-b border-stone-300/80 transition-all duration-300 transform ${
           isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'
         }`}
       >

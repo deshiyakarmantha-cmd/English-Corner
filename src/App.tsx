@@ -3,6 +3,7 @@ import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { LanguageSection } from './components/LanguageSection';
 import { GrammarLab } from './components/GrammarLab';
+import { LiteraryErasTimeline } from './components/LiteraryErasTimeline';
 import { LiteratureSection } from './components/LiteratureSection';
 import { ShakespeareReview } from './components/ShakespeareReview';
 import { InteractiveActivities } from './components/InteractiveActivities';
@@ -12,6 +13,7 @@ import { CertificateModal } from './components/CertificateModal';
 import { AiEnglishTutor } from './components/AiEnglishTutor';
 import { ReadingProgress } from './components/ReadingProgress';
 import { LiteraryTrivia } from './components/LiteraryTrivia';
+import { LanguageProvider } from './context/LanguageContext';
 
 export default function App() {
   const [globalCertOpen, setGlobalCertOpen] = useState(false);
@@ -27,46 +29,49 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-stone-900 selection:bg-amber-800/20 selection:text-amber-950">
-      {/* Top Reading Progress Bar for Literature & Shakespeare sections */}
-      <ReadingProgress />
+    <LanguageProvider>
+      <div className="min-h-screen flex flex-col bg-[#F6F1E7] text-stone-900 selection:bg-amber-800/20 selection:text-amber-950 font-sans">
+        {/* Top Reading Progress Bar for Literature & Shakespeare sections */}
+        <ReadingProgress />
 
-      {/* 3-Zone Top Navigation Contract */}
-      <Header 
-        onOpenCertificate={() => setGlobalCertOpen(true)} 
-        onOpenAiTutor={() => handleOpenAiTutor()}
-      />
+        {/* 3-Zone Top Navigation Contract with Language Switcher */}
+        <Header 
+          onOpenCertificate={() => setGlobalCertOpen(true)} 
+          onOpenAiTutor={() => handleOpenAiTutor()}
+        />
 
-      {/* Main Content Sections */}
-      <main className="flex-1">
-        <HeroSection onOpenAiTutor={handleOpenAiTutor} />
-        <LanguageSection />
-        <GrammarLab />
-        <LiteratureSection />
-        <ShakespeareReview />
-        <LiteraryTrivia onOpenAiTutor={handleOpenAiTutor} />
-        <InteractiveActivities />
-        <FestivalSchedule />
-      </main>
+        {/* Main Content Sections */}
+        <main className="flex-1">
+          <HeroSection onOpenAiTutor={handleOpenAiTutor} />
+          <LanguageSection />
+          <GrammarLab />
+          <LiteraryErasTimeline onOpenAiTutor={handleOpenAiTutor} />
+          <LiteratureSection />
+          <ShakespeareReview />
+          <LiteraryTrivia onOpenAiTutor={handleOpenAiTutor} />
+          <InteractiveActivities />
+          <FestivalSchedule />
+        </main>
 
-      {/* Institutional Footer */}
-      <Footer onOpenCertificate={() => setGlobalCertOpen(true)} />
+        {/* Institutional Footer */}
+        <Footer onOpenCertificate={() => setGlobalCertOpen(true)} />
 
-      {/* AI English Learning Tutor Chatbot */}
-      <AiEnglishTutor 
-        isOpen={aiTutorOpen} 
-        onClose={() => setAiTutorOpen(false)} 
-        onOpen={() => setAiTutorOpen(true)} 
-        initialPrompt={aiTutorPrompt}
-      />
+        {/* AI English Learning Tutor Chatbot with Web Speech & Translation */}
+        <AiEnglishTutor 
+          isOpen={aiTutorOpen} 
+          onClose={() => setAiTutorOpen(false)} 
+          onOpen={() => setAiTutorOpen(true)} 
+          initialPrompt={aiTutorPrompt}
+        />
 
-      {/* Global Keepsake Certificate Modal */}
-      <CertificateModal
-        isOpen={globalCertOpen}
-        onClose={() => setGlobalCertOpen(false)}
-        recipientName={recipientName}
-        achievementTitle="Official English Corner Scholar · Sanjanani 2026"
-      />
-    </div>
+        {/* Global Keepsake Certificate Modal */}
+        <CertificateModal
+          isOpen={globalCertOpen}
+          onClose={() => setGlobalCertOpen(false)}
+          recipientName={recipientName}
+          achievementTitle="Official English Corner Scholar · Sanjanani 2026"
+        />
+      </div>
+    </LanguageProvider>
   );
 }

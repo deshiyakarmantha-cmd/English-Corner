@@ -69,7 +69,7 @@ export const FestivalSchedule: React.FC = () => {
   };
 
   return (
-    <section className="py-16 lg:py-24 border-b border-stone-200 bg-[#FCFAF7]">
+    <section className="py-16 lg:py-24 border-b border-stone-300/80 bg-[#F7F2E8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -101,7 +101,7 @@ export const FestivalSchedule: React.FC = () => {
             {FESTIVAL_SCHEDULE.map((event, idx) => (
               <div
                 key={idx}
-                className="p-5 bg-white border border-stone-200 rounded-xl shadow-xs hover:border-amber-900/30 transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4"
+                className="p-5 bg-[#FDFBF7] border border-stone-300/80 rounded-xl shadow-xs hover:border-amber-900/40 transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4"
               >
                 <div className="space-y-1.5 max-w-xl">
                   <div className="flex items-center gap-2 text-xs font-mono text-amber-900 font-semibold">
@@ -182,7 +182,7 @@ export const FestivalSchedule: React.FC = () => {
         </div>
 
         {/* VISITOR GUESTBOOK & PLEDGE WALL */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-10 shadow-xs">
+        <div className="bg-[#FDFBF7] border border-stone-300/80 rounded-2xl p-6 sm:p-10 shadow-xs">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Form */}

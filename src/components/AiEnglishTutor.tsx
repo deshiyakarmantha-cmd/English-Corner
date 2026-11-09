@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Sparkles, 
   MessageSquare, 
@@ -10,10 +10,14 @@ import {
   Check, 
   RotateCcw, 
   BookOpen, 
-  Feather,
-  Loader2,
-  Languages,
-  ArrowRight
+  Feather, 
+  Loader2, 
+  Languages, 
+  ArrowRight,
+  Mic,
+  MicOff,
+  Radio,
+  Headphones
 } from 'lucide-react';
 import { generateScholarResponse } from '../data/scholarAiEngine';
 
@@ -28,44 +32,52 @@ export interface ChatMessage {
 
 const MULTILINGUAL_STARTERS = [
   {
+    category: 'Translation',
+    lang: 'පද්‍ය පරිවර්තනය (Poem)',
+    prompt: 'Translate this English poem into Sinhala metrical verse: "The woods are lovely, dark and deep, / But I have promises to keep..."',
+    desc: 'Lyrical & metrical verse translation',
+  },
+  {
+    category: 'Translation',
+    lang: 'රචනා පරිවර්තනය (Essay)',
+    prompt: 'Translate this academic essay excerpt into formal Sinhala: "Literature serves as a profound instrument for cross-cultural empathy and moral insight."',
+    desc: 'Academic prose & P.E.E.L. translation',
+  },
+  {
+    category: 'Translation',
+    lang: 'වචන පරිවර්තනය (Word & Etymology)',
+    prompt: 'Translate the word "Serendipity" into Sinhala and Tamil, explaining its Island origin and etymology.',
+    desc: 'Bilingual lexical & historical roots',
+  },
+  {
+    category: 'Sinhala Clinic',
     lang: 'සිංහල (Sinhala)',
     prompt: 'Tenses සහ කාල භේදය සිංහලෙන් සරලව පැහැදිලි කරන්න',
     desc: 'ක්‍රියාපද කාල භේදය සහ ව්‍යාකරණ රීති',
   },
   {
+    category: 'Tamil Clinic',
     lang: 'தமிழ் (Tamil)',
     prompt: 'ஆங்கில இலக்கணத்தை தமிழில் எளிமையாக விளக்குங்கள்',
     desc: 'காலங்கள் மற்றும் வாக்கிய அமைப்பு',
   },
   {
-    lang: 'Grammar Clinic',
+    category: 'Grammar',
+    lang: 'Sentence Diagnostic',
     prompt: 'Check my sentence: "Each of the monks have a book"',
-    desc: 'Subject-verb agreement & syntax check',
+    desc: 'Subject-verb agreement & syntax clinic',
   },
   {
-    lang: 'Shakespeare',
+    category: 'Shakespeare',
+    lang: 'Shakespeare Analysis',
     prompt: 'Analyze Hamlet’s "To be or not to be" soliloquy in detail',
     desc: 'Dramatic themes & poetic meter analysis',
   },
   {
-    lang: 'Français',
-    prompt: 'Comment utiliser la voix passive en anglais académique ?',
-    desc: 'Syntaxe et voix passive en anglais',
-  },
-  {
-    lang: 'Vocabulary',
+    category: 'Vocabulary',
+    lang: 'Advanced Lexicon',
     prompt: 'Give me 5 evocative literary adjectives for a rainy morning in Kandy',
-    desc: 'Advanced descriptive vocabulary for essays',
-  },
-  {
-    lang: 'Essay Blueprint',
-    prompt: 'How to structure a high-scoring literature essay using PEEL formula',
-    desc: 'Point, Evidence, Explanation, Link framework',
-  },
-  {
-    lang: 'Etymology',
-    prompt: 'What English words originated from Sinhala or Sri Lanka?',
-    desc: 'Serendipity, Cinnamon, Tourmaline & Teak',
+    desc: 'Descriptive vocabulary for essays',
   },
 ];
 
@@ -89,11 +101,13 @@ export const AiEnglishTutor: React.FC<AiEnglishTutorProps> = ({
       content: `### Welcome to the Sanjanani English Scholar AI
 I am your multilingual academic learning tutor at **The English Corner** for the **Sanjanani Literary Festival 2026** at the historic Asgiri Maha Vihara in Kandy (October 07, 08, 09, 2026).
 
-🌍 **Universal Multilingual Chat Session:**
-You may converse in **any language** of your preference:
-- **සිංහල (Sinhala):** ඕනෑම ඉංග්‍රීසි ව්‍යාකරණ, වාක්‍ය රීති, කාල භේදය හෝ ශේක්ස්පියර් නාට්‍ය පිළිබඳව සිංහලෙන් විමසන්න.
-- **தமிழ் (Tamil):** ஆங்கில இலக்கணம், வாக்கிய அமைப்பு மற்றும் இலக்கிய வினாக்களைத் தமிழில் கேட்கலாம்.
-- **English & Global Tongues:** Sentence diagnostics, grammar clinics, essay composition, and literary analyses in English, French, Spanish, German, Japanese, etc.
+🎙️ **Hands-Free Conversational Practice & Voice Input:**
+Click the **Microphone button** to speak your questions naturally! When **Hands-Free Practice** is enabled, I will speak my responses aloud to train your English auditory comprehension and cadence.
+
+🌐 **Masterful Translation Studio (Words, Essays, Poems):**
+- **Poetry:** Translate classical or modern verses between English, Sinhala, and Tamil with poetic meter.
+- **Essays:** Translate academic prose, speeches, and P.E.E.L. paragraphs with sophisticated register.
+- **Words:** Etymological translation of words tracing roots from Latin, Pali, and Sanskrit.
 
 *How may I assist your literary and linguistic studies today?*`,
       timestamp: 'Festival Desk',
@@ -105,7 +119,19 @@ You may converse in **any language** of your preference:
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState<boolean>(false);
+  const [handsFreeMode, setHandsFreeMode] = useState<boolean>(false);
+  const [speechSupported, setSpeechSupported] = useState<boolean>(true);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Check Web Speech API availability
+  useEffect(() => {
+    const hasSpeech = typeof window !== 'undefined' && 
+      ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+    setSpeechSupported(Boolean(hasSpeech));
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -118,6 +144,34 @@ You may converse in **any language** of your preference:
       setInput(initialPrompt);
     }
   }, [initialPrompt]);
+
+  const handleSpeak = useCallback((msgId: string, textToSpeak: string) => {
+    if (!('speechSynthesis' in window)) return;
+
+    if (speakingId === msgId) {
+      window.speechSynthesis.cancel();
+      setSpeakingId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    // Clean markdown headings, links, bullets, and emojis for smooth vocal delivery
+    const cleanText = textToSpeak
+      .replace(/[#*`_~>]/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/[✦•\uD800-\uDBFF][\uDC00-\uDFFF]/g, '');
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.92;
+    utterance.pitch = 1.0;
+    utterance.lang = 'en-GB';
+
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+
+    setSpeakingId(msgId);
+    window.speechSynthesis.speak(utterance);
+  }, [speakingId]);
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || input).trim();
@@ -134,7 +188,6 @@ You may converse in **any language** of your preference:
     setInput('');
     setIsLoading(true);
 
-    // Multi-turn chat session payload sent to backend Google Generative AI handler
     const payload = {
       userMessage: text,
       messages: [...messages, userMsg].map(m => ({
@@ -164,8 +217,9 @@ You may converse in **any language** of your preference:
       }
 
       const data = await response.json();
+      const newAssistantId = `ast-${Date.now()}`;
       const assistantMsg: ChatMessage = {
-        id: `ast-${Date.now()}`,
+        id: newAssistantId,
         role: 'assistant',
         content: data.reply || 'I am reflecting upon your query. Could you please rephrase or ask again?',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -174,44 +228,93 @@ You may converse in **any language** of your preference:
       };
 
       setMessages(prev => [...prev, assistantMsg]);
+
+      // If in hands-free mode or voice was used, speak the response aloud
+      if (handsFreeMode && assistantMsg.content) {
+        setTimeout(() => {
+          handleSpeak(newAssistantId, assistantMsg.content);
+        }, 300);
+      }
     } catch {
-      // Dynamic scholarly response fallback ensuring no dead ends or generic crashes
+      // Dynamic scholarly response fallback
       const scholarData = generateScholarResponse(text);
+      const fallbackId = `ast-${Date.now()}`;
       const fallbackMsg: ChatMessage = {
-        id: `ast-${Date.now()}`,
+        id: fallbackId,
         role: 'assistant',
         content: scholarData.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         source: 'scholar_engine',
       };
       setMessages(prev => [...prev, fallbackMsg]);
+
+      if (handsFreeMode && fallbackMsg.content) {
+        setTimeout(() => {
+          handleSpeak(fallbackId, fallbackMsg.content);
+        }, 300);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSpeak = (msg: ChatMessage) => {
-    if (!('speechSynthesis' in window)) return;
-
-    if (speakingId === msg.id) {
-      window.speechSynthesis.cancel();
-      setSpeakingId(null);
+  // Web Speech Recognition handler
+  const toggleListening = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
       return;
     }
 
-    window.speechSynthesis.cancel();
-    // Strip markdown formatting symbols for natural vocal enunciation
-    const cleanText = msg.content
-      .replace(/[#*`_~>]/g, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRec) {
+      alert("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
+      return;
+    }
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 0.92;
-    utterance.onend = () => setSpeakingId(null);
-    utterance.onerror = () => setSpeakingId(null);
+    try {
+      const recognition = new SpeechRec();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
 
-    setSpeakingId(msg.id);
-    window.speechSynthesis.speak(utterance);
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcriptText = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+
+        setInput(transcriptText);
+
+        const isFinal = event.results[0] && event.results[0].isFinal;
+        if (isFinal) {
+          setIsListening(false);
+          if (handsFreeMode && transcriptText.trim()) {
+            handleSendMessage(transcriptText);
+          }
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
+      setIsListening(false);
+    }
   };
 
   const handleCopy = (id: string, text: string) => {
@@ -221,11 +324,15 @@ You may converse in **any language** of your preference:
   };
 
   const handleClearHistory = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setSpeakingId(null);
     setMessages([
       {
         id: 'welcome-reset',
         role: 'assistant',
-        content: 'Conversation session refreshed. What literary topic, grammar principle, or multilingual inquiry would you like to explore next?',
+        content: 'Conversation session refreshed. What literary topic, grammar principle, or translation inquiry would you like to explore next?',
         timestamp: 'Festival Desk',
         source: 'scholar_ai_live',
       },
@@ -250,7 +357,7 @@ You may converse in **any language** of your preference:
               Scholar AI Tutor
             </span>
             <span className="text-[10px] text-amber-200/90 block font-mono">
-              Multilingual · 2026
+              Voice & Translation
             </span>
           </div>
         </button>
@@ -259,7 +366,7 @@ You may converse in **any language** of your preference:
       {/* Slide-over Drawer / Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden bg-black/45 backdrop-blur-xs flex justify-end">
-          <div className="w-full max-w-xl bg-[#FAF8F5] text-stone-900 h-full flex flex-col shadow-2xl border-l border-stone-300 animate-slideLeft">
+          <div className="w-full max-w-xl bg-[#F6F1E7] text-stone-900 h-full flex flex-col shadow-2xl border-l border-stone-300 animate-slideLeft">
             
             {/* Academic Header */}
             <div className="p-4 sm:p-5 bg-stone-900 text-stone-100 flex items-center justify-between border-b border-stone-800 shrink-0">
@@ -280,6 +387,22 @@ You may converse in **any language** of your preference:
               </div>
 
               <div className="flex items-center gap-1.5">
+                {/* Hands-Free Mode Toggle */}
+                <button
+                  onClick={() => setHandsFreeMode(prev => !prev)}
+                  className={`p-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1 cursor-pointer ${
+                    handsFreeMode 
+                      ? 'bg-amber-600 text-white font-bold' 
+                      : 'text-stone-400 hover:text-white hover:bg-stone-800'
+                  }`}
+                  title={handsFreeMode ? 'Hands-Free Speech Mode Active (Answers spoken automatically)' : 'Toggle Hands-Free Speech Practice'}
+                >
+                  <Headphones className="w-4 h-4" />
+                  <span className="hidden sm:inline text-[10px]">
+                    {handsFreeMode ? 'Voice Mode ON' : 'Voice Mode'}
+                  </span>
+                </button>
+
                 <button
                   onClick={handleClearHistory}
                   className="p-1.5 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800 transition-colors cursor-pointer"
@@ -288,6 +411,7 @@ You may converse in **any language** of your preference:
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
+
                 <button
                   onClick={onClose}
                   className="p-1.5 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800 transition-colors cursor-pointer"
@@ -298,13 +422,20 @@ You may converse in **any language** of your preference:
               </div>
             </div>
 
-            {/* Multilingual Support Banner */}
-            <div className="px-4 py-2 bg-[#F3ECE1] border-b border-stone-200/90 flex items-center justify-between text-[11px] text-stone-700">
+            {/* Multilingual & Translation Support Sub-Bar */}
+            <div className="px-4 py-2 bg-[#F3ECE1] border-b border-stone-200/90 flex flex-wrap items-center justify-between text-[11px] text-stone-700 gap-2">
               <div className="flex items-center gap-1.5">
                 <Languages className="w-3.5 h-3.5 text-amber-900" />
-                <span className="font-medium text-stone-900">Multilingual Chat Session Active:</span>
-                <span className="text-stone-600">සිංහල, தமிழ், English, Français & World Tongues</span>
+                <span className="font-semibold text-stone-900">Translation & Multilingual Engine:</span>
+                <span className="text-stone-600">English, සිංහල, தமிழ், Français</span>
               </div>
+
+              {handsFreeMode && (
+                <div className="flex items-center gap-1 text-[10px] text-amber-950 font-semibold bg-amber-200/80 px-2 py-0.5 rounded-md border border-amber-300">
+                  <Radio className="w-3 h-3 text-amber-900 animate-pulse" />
+                  <span>Hands-Free Active</span>
+                </div>
+              )}
             </div>
 
             {/* Messages Scroll Area */}
@@ -329,7 +460,7 @@ You may converse in **any language** of your preference:
                     <div
                       className={`max-w-[92%] sm:max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed shadow-xs ${
                         isAssistant
-                          ? 'bg-white border border-stone-200 text-stone-800 rounded-tl-xs'
+                          ? 'bg-[#FFFDF9] border border-amber-950/15 text-stone-800 rounded-tl-xs'
                           : 'bg-stone-900 text-white rounded-tr-xs'
                       }`}
                     >
@@ -340,9 +471,9 @@ You may converse in **any language** of your preference:
 
                       {/* Tool Actions for Scholar AI response */}
                       {isAssistant && (
-                        <div className="mt-3 pt-2.5 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
+                        <div className="mt-3 pt-2.5 border-t border-stone-200/60 flex items-center justify-between text-[11px] text-stone-500">
                           <button
-                            onClick={() => handleSpeak(msg)}
+                            onClick={() => handleSpeak(msg.id, msg.content)}
                             className="inline-flex items-center gap-1 text-stone-600 hover:text-amber-900 transition-colors cursor-pointer"
                             title="Pronounce response with vocal enunciation"
                           >
@@ -384,19 +515,35 @@ You may converse in **any language** of your preference:
               })}
 
               {isLoading && (
-                <div className="flex items-center gap-2 p-3 bg-white border border-stone-200 rounded-xl w-fit text-xs text-stone-700 shadow-xs">
+                <div className="flex items-center gap-2 p-3 bg-[#FFFDF9] border border-amber-950/15 rounded-xl w-fit text-xs text-stone-700 shadow-xs">
                   <Loader2 className="w-4 h-4 text-amber-800 animate-spin" />
-                  <span>The Scholar AI is composing pedagogical guidance...</span>
+                  <span>The Scholar AI is analyzing and composing guidance...</span>
+                </div>
+              )}
+
+              {/* Active Voice Listening Feedback Bar */}
+              {isListening && (
+                <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl flex items-center justify-between gap-3 text-xs text-amber-950 animate-pulse">
+                  <div className="flex items-center gap-2">
+                    <Mic className="w-4 h-4 text-rose-600 animate-bounce" />
+                    <span className="font-semibold">Listening to your voice... Speak now</span>
+                  </div>
+                  <button
+                    onClick={toggleListening}
+                    className="px-2.5 py-1 bg-rose-600 text-white rounded-md text-[10px] font-semibold hover:bg-rose-700"
+                  >
+                    Stop
+                  </button>
                 </div>
               )}
 
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Inquiries Deck */}
+            {/* Curated Inquiries & Translation Deck */}
             <div className="p-3 bg-[#F4EFE6] border-t border-stone-200/90 overflow-x-auto no-scrollbar">
               <div className="text-[10px] font-mono uppercase tracking-wider text-amber-950 font-bold mb-2">
-                Curated Scholarly Inquiries:
+                Curated Translation & Scholarly Prompts:
               </div>
               <div className="flex items-center gap-2">
                 {MULTILINGUAL_STARTERS.map((item, idx) => (
@@ -404,7 +551,7 @@ You may converse in **any language** of your preference:
                     key={idx}
                     onClick={() => handleSendMessage(item.prompt)}
                     disabled={isLoading}
-                    className="px-3 py-1.5 bg-white border border-stone-300 hover:border-amber-500 hover:bg-amber-50/60 rounded-xl text-left text-xs transition-colors shrink-0 disabled:opacity-50 cursor-pointer shadow-2xs"
+                    className="px-3 py-1.5 bg-[#FFFDF9] border border-stone-300 hover:border-amber-500 hover:bg-amber-50/60 rounded-xl text-left text-xs transition-colors shrink-0 disabled:opacity-50 cursor-pointer shadow-2xs"
                     title={item.prompt}
                   >
                     <div className="font-semibold text-amber-950 text-[11px] leading-tight">
@@ -418,22 +565,44 @@ You may converse in **any language** of your preference:
               </div>
             </div>
 
-            {/* Message Input Bar */}
+            {/* Message Input & Speech Bar */}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSendMessage();
               }}
-              className="p-3.5 sm:p-4 bg-white border-t border-stone-200 flex items-center gap-2 shrink-0"
+              className="p-3.5 sm:p-4 bg-[#FAF6EE] border-t border-stone-300/80 flex items-center gap-2 shrink-0"
             >
+              {/* Web Speech Recognition Microphone Button */}
+              {speechSupported && (
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                    isListening
+                      ? 'bg-rose-600 border-rose-700 text-white animate-pulse shadow-md'
+                      : 'bg-[#FFFDF9] hover:bg-amber-100/70 border-stone-300 text-stone-700 hover:text-amber-950'
+                  }`}
+                  title={isListening ? "Listening... Click to stop" : "Speak question using Web Speech API"}
+                  aria-label="Voice input"
+                >
+                  {isListening ? (
+                    <MicOff className="w-4 h-4 text-white" />
+                  ) : (
+                    <Mic className="w-4 h-4 text-amber-900" />
+                  )}
+                </button>
+              )}
+
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask in Sinhala, Tamil, English, or any language..."
+                placeholder="Ask in English or Sinhala, translate poem/essay, or click mic..."
                 disabled={isLoading}
-                className="flex-1 px-4 py-2.5 text-xs sm:text-sm bg-stone-50 border border-stone-300 rounded-xl focus:outline-hidden focus:ring-1 focus:ring-amber-900 text-stone-900 placeholder-stone-400 font-sans"
+                className="flex-1 px-4 py-2.5 text-xs sm:text-sm bg-[#FFFDF9] border border-stone-300 rounded-xl focus:outline-hidden focus:ring-1 focus:ring-amber-900 text-stone-900 placeholder-stone-400 font-sans"
               />
+
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}

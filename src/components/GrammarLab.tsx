@@ -117,7 +117,7 @@ export const GrammarLab: React.FC = () => {
   };
 
   return (
-    <section id="grammar" className="py-16 lg:py-24 border-b border-stone-200 bg-[#FAF7F2]">
+    <section id="grammar" className="py-16 lg:py-24 border-b border-stone-300/80 bg-[#F5EFE4]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -129,17 +129,17 @@ export const GrammarLab: React.FC = () => {
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-stone-900 tracking-tight">
             The Grammar Laboratory
           </h2>
-          <p className="mt-3 text-base text-stone-600 leading-relaxed">
+          <p className="mt-3 text-base text-stone-700 leading-relaxed">
             Grammar is the subtle architecture of meaning. Here at the English Corner, we demystify syntax, calibrate tense precision, and refine rhetorical poise for academic and creative writing.
           </p>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-stone-200/70 border border-stone-300 rounded-xl mb-8 max-w-2xl">
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-stone-200/90 border border-stone-300 rounded-xl mb-8 max-w-2xl shadow-2xs">
           <button
             onClick={() => setActiveTab('parts')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg transition-colors ${
-              activeTab === 'parts' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600 hover:text-stone-900'
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+              activeTab === 'parts' ? 'bg-[#FDFBF7] text-stone-900 shadow-xs font-semibold' : 'text-stone-700 hover:text-stone-950'
             }`}
           >
             <Layers className="w-3.5 h-3.5 text-amber-800" />
@@ -148,8 +148,8 @@ export const GrammarLab: React.FC = () => {
           
           <button
             onClick={() => setActiveTab('tenses')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg transition-colors ${
-              activeTab === 'tenses' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600 hover:text-stone-900'
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+              activeTab === 'tenses' ? 'bg-[#FDFBF7] text-stone-900 shadow-xs font-semibold' : 'text-stone-700 hover:text-stone-950'
             }`}
           >
             <Clock className="w-3.5 h-3.5 text-amber-800" />
@@ -158,8 +158,8 @@ export const GrammarLab: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('voice')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg transition-colors ${
-              activeTab === 'voice' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600 hover:text-stone-900'
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+              activeTab === 'voice' ? 'bg-[#FDFBF7] text-stone-900 shadow-xs font-semibold' : 'text-stone-700 hover:text-stone-950'
             }`}
           >
             <ArrowRightLeft className="w-3.5 h-3.5 text-amber-800" />
@@ -168,8 +168,8 @@ export const GrammarLab: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('clinic')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg transition-colors ${
-              activeTab === 'clinic' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600 hover:text-stone-900'
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+              activeTab === 'clinic' ? 'bg-[#FDFBF7] text-stone-900 shadow-xs font-semibold' : 'text-stone-700 hover:text-stone-950'
             }`}
           >
             <HelpCircle className="w-3.5 h-3.5 text-amber-800" />
@@ -182,7 +182,7 @@ export const GrammarLab: React.FC = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {GRAMMAR_TOPICS.map((topic) => (
-                <div key={topic.id} className="p-6 bg-white border border-stone-200 rounded-2xl shadow-xs">
+                <div key={topic.id} className="p-6 bg-[#FFFDF9] border border-stone-300/80 rounded-2xl shadow-xs">
                   <h3 className="text-xl font-serif font-bold text-amber-950 mb-1">
                     {topic.title}
                   </h3>
@@ -197,7 +197,7 @@ export const GrammarLab: React.FC = () => {
                     ))}
                   </ul>
 
-                  <div className="p-3.5 bg-stone-50 border border-stone-200/80 rounded-xl text-xs space-y-2">
+                  <div className="p-3.5 bg-[#FAF6EE] border border-stone-300/80 rounded-xl text-xs space-y-2">
                     <div className="font-semibold text-stone-900">Exemplar Analysis:</div>
                     <div className="font-serif italic text-amber-950">
                       &ldquo;{topic.examples[0].correct}&rdquo;
@@ -219,7 +219,7 @@ export const GrammarLab: React.FC = () => {
 
         {/* TAB 2: 12 TENSES COMPASS */}
         {activeTab === 'tenses' && (
-          <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 shadow-xs">
+          <div className="bg-[#FFFDF9] border border-stone-300/80 rounded-2xl p-6 sm:p-8 shadow-xs">
             <div className="mb-6">
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-stone-900">
                 The Chronological Master Matrix
@@ -261,7 +261,7 @@ export const GrammarLab: React.FC = () => {
                         {activeTense.tense}
                       </h4>
                     </div>
-                    <div className="text-xs font-mono font-medium px-3 py-1 bg-white border border-stone-300 rounded-lg text-amber-950">
+                    <div className="text-xs font-mono font-medium px-3 py-1 bg-[#FAF5EB] border border-stone-300 rounded-lg text-amber-950">
                       Formula: {activeTense.formula}
                     </div>
                   </div>
@@ -273,7 +273,7 @@ export const GrammarLab: React.FC = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-stone-800 mb-1">Pirivena & Festival Context Exemplar:</p>
-                      <p className="font-serif italic text-sm text-amber-950 leading-relaxed bg-white/70 p-3 rounded-lg border border-stone-200">
+                      <p className="font-serif italic text-sm text-amber-950 leading-relaxed bg-[#FAF5EB] p-3 rounded-lg border border-stone-300/80">
                         &ldquo;{activeTense.example}&rdquo;
                       </p>
                     </div>
@@ -286,7 +286,7 @@ export const GrammarLab: React.FC = () => {
 
         {/* TAB 3: VOICE & AGENCY */}
         {activeTab === 'voice' && (
-          <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 shadow-xs">
+          <div className="bg-[#FFFDF9] border border-stone-300/80 rounded-2xl p-6 sm:p-8 shadow-xs">
             <div className="max-w-2xl mb-6">
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-stone-900">
                 Active versus Passive Voice Studio
@@ -310,7 +310,7 @@ export const GrammarLab: React.FC = () => {
               </button>
               <button
                 onClick={() => setVoiceToggle('passive')}
-                className={`px-5 py-2 text-xs font-semibold rounded-lg transition-all ${
+                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
                   voiceToggle === 'passive'
                     ? 'bg-amber-950 text-white shadow-xs'
                     : 'text-stone-600 hover:text-stone-900'
@@ -323,7 +323,7 @@ export const GrammarLab: React.FC = () => {
             {/* Live Comparison Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className={`p-6 rounded-xl border transition-all ${
-                voiceToggle === 'active' ? 'bg-amber-50/70 border-amber-800/40 ring-1 ring-amber-900/20' : 'bg-stone-50 border-stone-200 opacity-60'
+                voiceToggle === 'active' ? 'bg-amber-50/70 border-amber-800/40 ring-1 ring-amber-900/20' : 'bg-[#FAF6EE] border-stone-200 opacity-60'
               }`}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold uppercase tracking-wider text-amber-900">Active Architecture</span>
@@ -340,7 +340,7 @@ export const GrammarLab: React.FC = () => {
               </div>
 
               <div className={`p-6 rounded-xl border transition-all ${
-                voiceToggle === 'passive' ? 'bg-amber-50/70 border-amber-800/40 ring-1 ring-amber-900/20' : 'bg-stone-50 border-stone-200 opacity-60'
+                voiceToggle === 'passive' ? 'bg-amber-50/70 border-amber-800/40 ring-1 ring-amber-900/20' : 'bg-[#FAF6EE] border-stone-200 opacity-60'
               }`}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold uppercase tracking-wider text-amber-900">Passive Architecture</span>
@@ -361,7 +361,7 @@ export const GrammarLab: React.FC = () => {
 
         {/* TAB 4: FIX-THE-LINE CLINIC */}
         {activeTab === 'clinic' && (
-          <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 shadow-xs">
+          <div className="bg-[#FFFDF9] border border-stone-300/80 rounded-2xl p-6 sm:p-8 shadow-xs">
             <div className="max-w-2xl mb-6">
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-stone-900">
                 The Fix-the-Line Interactive Clinic
@@ -375,7 +375,7 @@ export const GrammarLab: React.FC = () => {
               {FIX_THE_LINE_EXERCISES.map((item) => {
                 const isRevealed = revealedFixes.includes(item.id);
                 return (
-                  <div key={item.id} className="p-5 border border-stone-200 rounded-xl bg-stone-50/60">
+                  <div key={item.id} className="p-5 border border-stone-300/80 rounded-xl bg-[#FAF6EE]">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
                       <div className="text-xs font-semibold text-rose-900 flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
@@ -402,7 +402,7 @@ export const GrammarLab: React.FC = () => {
                         <p className="font-serif text-sm font-medium text-stone-950 mb-1.5">
                           &ldquo;{item.correct}&rdquo;
                         </p>
-                        <p className="text-stone-600 bg-white p-2.5 rounded-lg border border-stone-200/70 text-[11px]">
+                        <p className="text-stone-600 bg-[#FAF5EB] p-2.5 rounded-lg border border-stone-300/80 text-[11px]">
                           <strong>Rule:</strong> {item.rule}
                         </p>
                       </div>

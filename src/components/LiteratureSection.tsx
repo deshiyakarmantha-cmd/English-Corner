@@ -10,7 +10,7 @@ export const LiteratureSection: React.FC = () => {
   const activeEra = LITERATURE_ERAS.find(era => era.id === selectedEraId) || LITERATURE_ERAS[0];
 
   return (
-    <section id="literature" className="py-16 lg:py-24 border-b border-stone-200 bg-[#FCFAF7]">
+    <section id="literature" className="py-16 lg:py-24 border-b border-stone-300/80 bg-[#F7F2E8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -46,7 +46,7 @@ export const LiteratureSection: React.FC = () => {
         </div>
 
         {/* Selected Era Deep Dive Container */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-10 shadow-xs mb-16">
+        <div className="bg-[#FDFCF9] border-2 border-stone-300/80 rounded-2xl p-6 sm:p-10 shadow-sm mb-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
             {/* Left 7 Cols: Overview & Notable Works */}
@@ -70,7 +70,7 @@ export const LiteratureSection: React.FC = () => {
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-stone-600">
                     {activeEra.definingTraits.map((trait, idx) => (
-                      <div key={idx} className="flex items-start gap-2 p-2 bg-stone-50 rounded-lg border border-stone-100">
+                      <div key={idx} className="flex items-start gap-2 p-2 bg-[#FAF6EE] rounded-lg border border-stone-300/80">
                         <span className="text-amber-800 font-bold">•</span>
                         <span>{trait}</span>
                       </div>

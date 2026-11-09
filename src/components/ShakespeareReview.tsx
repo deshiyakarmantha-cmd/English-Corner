@@ -120,7 +120,7 @@ export const ShakespeareReview: React.FC = () => {
   const activeMeterLine = FAMOUS_LINES_FOR_METER[activeMeterLineIndex];
 
   return (
-    <section id="shakespeare" className="py-16 lg:py-24 border-b border-stone-200 bg-[#FAF7F2]">
+    <section id="shakespeare" className="py-16 lg:py-24 border-b border-stone-300/80 bg-[#F5EFE4]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -132,7 +132,7 @@ export const ShakespeareReview: React.FC = () => {
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-stone-900 tracking-tight">
             William Shakespeare: Review & Canonical Works
           </h2>
-          <p className="mt-3 text-base text-stone-600 leading-relaxed">
+          <p className="mt-3 text-base text-stone-700 leading-relaxed">
             Few mortals have expanded the boundaries of language, human psychology, and dramatic catharsis like William Shakespeare (1564–1616). Discover comprehensive critical reviews of his landmark plays, sonnets, and the enduring English phrases he invented.
           </p>
         </div>
@@ -142,7 +142,7 @@ export const ShakespeareReview: React.FC = () => {
           
           {/* Portrait Column */}
           <div className="lg:col-span-4 flex flex-col">
-            <div className="rounded-2xl overflow-hidden border border-stone-300 shadow-md bg-stone-900 aspect-3/4">
+            <div className="rounded-2xl overflow-hidden border-2 border-stone-300 shadow-md bg-stone-900 aspect-3/4">
               <SafeImage
                 src={shakespearePortraitImage}
                 fallbackName="william_shakespeare_portrait_1791314938105.jpg"
@@ -150,13 +150,13 @@ export const ShakespeareReview: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <figcaption className="text-xs font-serif text-stone-500 italic mt-2.5 text-center">
+            <figcaption className="text-xs font-serif text-stone-600 italic mt-2.5 text-center">
               William Shakespeare (1564–1616) — Playwright, Poet, and Actor of The King&apos;s Men.
             </figcaption>
           </div>
 
           {/* Biographical Overview & First Folio Analysis */}
-          <div className="lg:col-span-8 bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-xs">
+          <div className="lg:col-span-8 bg-[#FDFBF7] border-2 border-stone-300/80 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-xs">
             <div>
               <div className="flex items-center gap-2 text-xs font-mono text-amber-900 mb-2">
                 <span>STRATFORD-UPON-AVON TO LONDON</span>
@@ -245,7 +245,7 @@ export const ShakespeareReview: React.FC = () => {
                   onClick={() => setSelectedGenre(genre)}
                   className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                     selectedGenre === genre
-                      ? 'bg-white text-stone-900 shadow-xs'
+                      ? 'bg-[#FFFDF9] text-stone-900 shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
@@ -264,7 +264,7 @@ export const ShakespeareReview: React.FC = () => {
                 className={`p-3 text-left border rounded-xl transition-all ${
                   selectedWork.id === work.id
                     ? 'border-amber-900 bg-amber-50/90 ring-1 ring-amber-900/30'
-                    : 'border-stone-200 bg-white hover:border-stone-300'
+                    : 'border-stone-300 bg-[#FFFDF9] hover:bg-[#FAF4EB]'
                 }`}
               >
                 <span className="text-[10px] font-mono uppercase text-amber-900 font-bold block truncate">
@@ -278,7 +278,7 @@ export const ShakespeareReview: React.FC = () => {
           </div>
 
           {/* Active Work In-Depth Review Dossier */}
-          <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-10 shadow-xs">
+          <div className="bg-[#FFFDF9] border border-stone-300/80 rounded-2xl p-6 sm:p-10 shadow-xs">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-6 mb-6">
               <div>
                 <div className="flex items-center gap-2 text-xs font-mono text-stone-500 uppercase tracking-wider mb-1">
@@ -397,7 +397,7 @@ export const ShakespeareReview: React.FC = () => {
         </div>
 
         {/* INTERACTIVE IAMBIC PENTAMETER SCANNER */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 shadow-xs mb-16">
+        <div className="bg-[#FFFDF9] border border-stone-300/80 rounded-2xl p-6 sm:p-8 shadow-xs mb-16">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-900 mb-1">
@@ -438,7 +438,7 @@ export const ShakespeareReview: React.FC = () => {
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap border ${
                   activeMeterLineIndex === idx
                     ? 'bg-stone-900 text-white border-stone-900'
-                    : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+                    : 'bg-[#FAF6EE] text-stone-700 border-stone-300 hover:bg-stone-100'
                 }`}
               >
                 {item.play}
@@ -466,7 +466,7 @@ export const ShakespeareReview: React.FC = () => {
                           ? 'bg-amber-800 text-white scale-110 shadow-md ring-2 ring-amber-400'
                           : item.stress
                           ? 'bg-amber-100/90 border-amber-300 font-bold text-amber-950'
-                          : 'bg-white border-stone-200 text-stone-600'
+                          : 'bg-[#FAF6EE] border-stone-300 text-stone-600'
                       }`}
                     >
                       {item.syl}
@@ -501,7 +501,7 @@ export const ShakespeareReview: React.FC = () => {
             {SHAKESPEARE_COINED_PHRASES.map((item, idx) => (
               <div
                 key={idx}
-                className="p-3.5 bg-white border border-stone-200 rounded-xl shadow-xs hover:border-amber-900/30 transition-colors"
+                className="p-3.5 bg-[#FFFDF9] border border-stone-300/80 rounded-xl shadow-xs hover:border-amber-900/30 transition-colors"
               >
                 <div className="font-serif font-bold text-amber-950 text-sm mb-1">
                   &ldquo;{item.phrase}&rdquo;

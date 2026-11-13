@@ -188,12 +188,16 @@ Click the **Microphone button** to speak your questions naturally! When **Hands-
     setInput('');
     setIsLoading(true);
 
-    const payload = {
-      userMessage: text,
-      messages: [...messages, userMsg].map(m => ({
+    const historyForApi = [...messages, userMsg]
+      .filter(m => m.id !== 'welcome' && m.id !== 'welcome-reset')
+      .map(m => ({
         role: m.role,
         content: m.content,
-      })),
+      }));
+
+    const payload = {
+      userMessage: text,
+      messages: historyForApi,
     };
 
     try {

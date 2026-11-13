@@ -3,7 +3,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
-import { generateScholarResponse } from './src/data/scholarAiEngine';
+import {
+  generateScholarResponse,
+  isTranslationPrompt,
+  extractTranslationPayload,
+} from './src/data/scholarAiEngine';
 import { getCuratedWord } from './src/data/literaryWords';
 import { getDailyTriviaQuestions } from './src/data/triviaData';
 
@@ -90,7 +94,7 @@ Respond with ONLY valid JSON adhering strictly to this schema:
   "scholarNote": "..."
 }`;
 
-  const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+  const candidateModels = ['gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
   for (const modelName of candidateModels) {
     const abortController = new AbortController();
     const timeoutTimer = setTimeout(() => abortController.abort(), 12000);
@@ -167,6 +171,264 @@ if (isValidGeminiKey(apiKey)) {
   });
 }
 
+const LANG_LABELS: Record<string, string> = {
+  si: 'සිංහල (Sinhala)',
+  ta: 'தமிழ் (Tamil)',
+  en: 'English',
+  fr: 'Français (French)',
+  es: 'Español (Spanish)',
+  de: 'Deutsch (German)',
+  hi: 'हिन्दी (Hindi)',
+  ja: '日本語 (Japanese)',
+};
+
+function detectSourceLang(text: string): string {
+  if (/[\u0D80-\u0DFF]/.test(text)) return 'si';
+  if (/[\u0B80-\u0BFF]/.test(text)) return 'ta';
+  if (/[\u0900-\u097F]/.test(text)) return 'hi';
+  if (/[\u3040-\u30FF\u4E00-\u9FAF]/.test(text)) return 'ja';
+  return 'en';
+}
+
+function detectTargetLangs(promptText: string, sourceLang: string): string[] {
+  const lower = promptText.toLowerCase();
+  const explicit: string[] = [];
+  if (lower.includes('sinhala') || promptText.includes('සිංහල')) explicit.push('si');
+  if (lower.includes('tamil') || promptText.includes('தமிழ்')) explicit.push('ta');
+  if (lower.includes('english') || promptText.includes('ඉංග්‍රීසි') || promptText.includes('ஆங்கிலம்')) explicit.push('en');
+  if (lower.includes('french') || lower.includes('français')) explicit.push('fr');
+  if (lower.includes('spanish') || lower.includes('español')) explicit.push('es');
+  if (lower.includes('german') || lower.includes('deutsch')) explicit.push('de');
+  if (lower.includes('hindi') || promptText.includes('हिन्दी')) explicit.push('hi');
+  if (lower.includes('japanese') || promptText.includes('日本語')) explicit.push('ja');
+
+  // Filter out sourceLang if only sourceLang matched accidentally (e.g., "Translate this English word..." has "english")
+  const filtered = explicit.filter((l) => l !== sourceLang);
+  if (filtered.length > 0) return filtered.slice(0, 2);
+  if (sourceLang === 'en') return ['si', 'ta'];
+  return ['en'];
+}
+
+function extractCleanSourceForTranslation(rawText: string): string {
+  const quoted = extractTranslationPayload(rawText);
+  if (quoted) return quoted;
+
+  return rawText
+    .replace(
+      /\b(please|can\s+you|could\s+you|translate|translation|traduire|traduction|convert|define|definition|explain|this|the|a|an|word|phrase|sentence|paragraph|essay|excerpt|poem|poetry|verse|text|meaning|of|from|into|to|in|and|formal|academic|metrical|sinhala|tamil|english|french|spanish|german|hindi|japanese|explaining|how\s+to\s+say|how\s+do\s+you\s+say|what\s+does|what\s+is|mean|පරිවර්තනය|පරිවර්තන|කරන්න|තේරුම|වචනය|සිංහලට|සිංහලෙන්|ඉංග්‍රීසියට|தமிழில்|மொழிபெயர்ப்பு|மொழிபெயர்க்கவும்)\b/gi,
+      ' '
+    )
+    .replace(/^[:\-\s"'“‘]+|[:\-\s"'”’?]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+async function fetchMyMemoryTranslation(text: string, sourceLang: string, targetLang: string): Promise<string | null> {
+  if (!text.trim() || sourceLang === targetLang) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const pair = `${sourceLang}|${targetLang}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.slice(0, 480))}&langpair=${encodeURIComponent(pair)}`;
+    const resp = await fetch(url, { signal: controller.signal });
+    if (!resp.ok) return null;
+    const data: any = await resp.json();
+    const translated = data?.responseData?.translatedText?.trim();
+    if (!translated || data?.responseStatus === 403 || /MYMEMORY WARNING/i.test(translated)) {
+      return null;
+    }
+    // Reject corrupted pivot artifacts (Cyrillic or Hangul leaking into si/ta/en)
+    if (['si', 'ta', 'en', 'fr', 'es', 'de'].includes(targetLang) && /[\u0400-\u04FF\uAC00-\uD7AF]/.test(translated)) {
+      return null;
+    }
+    // Ensure non-Latin target languages actually returned target script characters rather than random English words
+    if (targetLang === 'si' && !/[\u0D80-\u0DFF]/.test(translated)) {
+      return null;
+    }
+    if (targetLang === 'ta' && !/[\u0B80-\u0BFF]/.test(translated)) {
+      return null;
+    }
+    if (targetLang === 'hi' && !/[\u0900-\u097F]/.test(translated)) {
+      return null;
+    }
+    if (targetLang === 'ja' && !/[\u3040-\u30FF\u4E00-\u9FAF]/.test(translated)) {
+      return null;
+    }
+    return translated;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchDictionaryProfile(word: string): Promise<{ phonetic: string; pos: string; definition: string; example?: string } | null> {
+  if (!/^[a-zA-Z-]{2,32}$/.test(word)) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+  try {
+    const resp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`, {
+      signal: controller.signal,
+    });
+    if (!resp.ok) return null;
+    const data: any = await resp.json();
+    const entry = Array.isArray(data) ? data[0] : null;
+    const firstMeaning = entry?.meanings?.[0];
+    const firstDef = firstMeaning?.definitions?.[0];
+    if (!firstDef?.definition) return null;
+    return {
+      phonetic: entry.phonetic || entry.phonetics?.find((ph: any) => ph?.text)?.text || '',
+      pos: firstMeaning.partOfSpeech || 'term',
+      definition: firstDef.definition,
+      example: firstDef.example,
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function cleanWikiSearchQuery(rawQuery: string): string {
+  const stripped = rawQuery
+    .trim()
+    .replace(
+      /^(can\s+you\s+(please\s+)?(tell\s+me\s+about|explain|define|describe)\s+|please\s+(explain|define|tell\s+me\s+about)\s+|what\s+(is|are|was|were)\s+(a\s+|an\s+|the\s+)?|who\s+(is|are|was|were)\s+(the\s+)?|where\s+(is|are|was|were)\s+|when\s+(did|was|were)\s+|tell\s+me\s+about\s+(the\s+)?|explain\s+(the\s+|a\s+|an\s+)?|define\s+(the\s+|a\s+|an\s+)?|describe\s+(the\s+|a\s+|an\s+)?)/i,
+      ''
+    )
+    .replace(/[?!."“”‘’]+$/g, '')
+    .trim();
+  return stripped.length >= 2 ? stripped : rawQuery.trim();
+}
+
+async function fetchWikipediaSummary(query: string): Promise<string | null> {
+  const cleanQuery = cleanWikiSearchQuery(query);
+  if (!cleanQuery || cleanQuery.length < 2) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  const headers = { 'User-Agent': 'SanjananiEnglishScholar/1.0' };
+
+  try {
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery)}&utf8=&format=json&srlimit=3`;
+    const searchResp = await fetch(searchUrl, { headers, signal: controller.signal });
+    if (!searchResp.ok) return null;
+
+    const searchData: any = await searchResp.json();
+    const results: Array<{ title?: string }> = searchData?.query?.search || [];
+    if (results.length === 0) return null;
+
+    for (const item of results.slice(0, 2)) {
+      if (!item.title) continue;
+      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(item.title.replace(/ /g, '_'))}`;
+      const summaryResp = await fetch(summaryUrl, { headers, signal: controller.signal });
+      if (!summaryResp.ok) continue;
+
+      const summaryData: any = await summaryResp.json();
+      if (summaryData?.type === 'disambiguation' || !summaryData?.extract) continue;
+
+      const title = summaryData.title || item.title;
+      const extract = String(summaryData.extract).trim();
+      if (extract) {
+        return `### ${title}\n${extract}`;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function performLiveServerTranslation(promptText: string): Promise<string | null> {
+  const sourceText = extractCleanSourceForTranslation(promptText);
+  if (!sourceText || sourceText.length < 2) return null;
+
+  const sourceLang = detectSourceLang(sourceText);
+  const targetLangs = detectTargetLangs(promptText, sourceLang);
+  const isPoem =
+    /\b(poem|poetry|verse|sonnet|stanza)\b|කවි|පද්‍ය|கவிதை/i.test(promptText) ||
+    sourceText.includes('\n') ||
+    sourceText.includes(' / ');
+  const wordCount = sourceText.split(/\s+/).filter(Boolean).length;
+  const isSingleEnglishWord = sourceLang === 'en' && wordCount === 1 && /^[a-zA-Z-]+$/.test(sourceText);
+
+  if (isPoem && (sourceText.includes('\n') || sourceText.includes('/'))) {
+    const lines = sourceText
+      .split(/\n|\s*\/\s*/)
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .slice(0, 10);
+
+    const primaryTarget = targetLangs[0] || 'si';
+    const translatedLines = await Promise.all(
+      lines.map(async (line) => (await fetchMyMemoryTranslation(line, sourceLang, primaryTarget)) || line)
+    );
+
+    if (translatedLines.every((t, i) => t === lines[i])) {
+      return null;
+    }
+
+    const formattedOriginal = lines.map((l) => `> *${l}*`).join('  \n');
+    const formattedTranslated = translatedLines.map((l) => `> *${l}*`).join('  \n');
+
+    return `### Poetic Verse Translation (${LANG_LABELS[sourceLang] || sourceLang.toUpperCase()} → ${LANG_LABELS[primaryTarget] || primaryTarget.toUpperCase()})
+
+#### 1. Original Verse
+${formattedOriginal}
+
+#### 2. Translated Verse (${LANG_LABELS[primaryTarget] || primaryTarget.toUpperCase()})
+${formattedTranslated}
+
+**Literary Note:**  
+English follows Subject–Verb–Object order, whereas written Sinhala and Tamil preserve poetic cadence cleanly in Subject–Object–Verb rhythm (*rasa*).`;
+  }
+
+  const [dictProfile, ...translations] = await Promise.all([
+    isSingleEnglishWord ? fetchDictionaryProfile(sourceText) : Promise.resolve(null),
+    ...targetLangs.map(async (tl) => ({
+      lang: tl,
+      label: LANG_LABELS[tl] || tl.toUpperCase(),
+      text: await fetchMyMemoryTranslation(sourceText, sourceLang, tl),
+    })),
+  ]);
+
+  const validTranslations = translations.filter((t) => Boolean(t.text));
+  if (validTranslations.length === 0 && !dictProfile) {
+    return null;
+  }
+
+  if (isSingleEnglishWord) {
+    const displayWord = sourceText.charAt(0).toUpperCase() + sourceText.slice(1);
+    const sections: string[] = [`### Bilingual Word Translation: "${displayWord}"`];
+
+    if (dictProfile) {
+      sections.push(
+        `1. **English Definition & Phonetics:**\n   - **Word:** **${displayWord}** *(${dictProfile.pos})*${dictProfile.phonetic ? ` — \`${dictProfile.phonetic}\`` : ''}\n   - **Meaning:** ${dictProfile.definition}${dictProfile.example ? `\n   - **Example:** *"${dictProfile.example}"*` : ''}`
+      );
+    }
+
+    validTranslations.forEach((tr, idx) => {
+      const num = dictProfile ? idx + 2 : idx + 1;
+      sections.push(`${num}. **${tr.label}:**\n   - **${tr.text}**`);
+    });
+
+    return sections.join('\n\n');
+  }
+
+  const sections: string[] = [
+    `### Scholarly Translation (${LANG_LABELS[sourceLang] || sourceLang.toUpperCase()} → ${validTranslations.map((v) => v.label).join(' & ')})`,
+    `#### Source Text\n> *"${sourceText}"*`,
+  ];
+
+  validTranslations.forEach((tr, idx) => {
+    sections.push(`#### ${idx + 1}. ${tr.label}\n> **${tr.text}**`);
+  });
+
+  return sections.join('\n\n');
+}
+
 function generateEducationalFallback(prompt: string): string {
   return generateScholarResponse(prompt).reply;
 }
@@ -199,7 +461,7 @@ UNIVERSAL MULTILINGUAL PEDAGOGY:
    - Words & Lexicons: Provide precise grammatical category, phonetics, etymological roots (Pali, Sanskrit, Latin, Old French), and bilingual example sentences.
    - Poems & Verses: Translate poetry with metrical sensitivity, rhyme preservation, and aesthetic resonance (*rasa*).
    - Essays & Academic Prose: Translate formal essays maintaining rhetorical coherence, sophisticated vocabulary, and PEEL framework.
-8. FORMATTING: Use clean markdown headings, bullet points, and bold key terms. Keep answers concise, inspiring, and accessible.`;
+8. DIRECTNESS & ACCURACY: Always answer the user's exact question directly first before adding supplementary context or examples. Never deflect with vague platitudes. Use clean markdown headings, bullet points, and bold key terms.`;
 
     // Build multi-turn chat history for aiClient.chats.create
     const chatHistory: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
@@ -246,8 +508,8 @@ UNIVERSAL MULTILINGUAL PEDAGOGY:
       });
 
       // Permitted non-deprecated models per gemini-api SKILL:
-      // 'gemini-3.8-flash' (primary for text & chat) and 'gemini-3.1-flash-lite' (fallback)
-      const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+      // 'gemini-4-hydrogen' (primary for text & chat) and 'gemini-3.1-flash-lite' (fallback)
+      const candidateModels = ['gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
       let reply = '';
       let usedModel = '';
 
@@ -310,10 +572,61 @@ UNIVERSAL MULTILINGUAL PEDAGOGY:
       }
     }
 
-    // Dynamic educational scholarly response (never static hardcoded)
-    const fallbackReply = generateEducationalFallback(promptText);
+    const scholarResult = generateScholarResponse(promptText);
+    const curatedCategories = new Set([
+      'translation_poem_canonical',
+      'translation_essay_curated',
+      'translation_word_lexicon',
+      'lexicon_word_explanation',
+      'lexicon_single_word',
+    ]);
+
+    // If not already matched by a deep literary curated entry, perform live server-side translation / dictionary lookup
+    if (
+      !curatedCategories.has(scholarResult.category) &&
+      (isTranslationPrompt(promptText) ||
+        /\b(explain|define|meaning of|what does)\s+["“‘']?[a-zA-Z-]{3,}["”’']?/i.test(promptText))
+    ) {
+      const liveTranslated = await performLiveServerTranslation(promptText);
+      if (liveTranslated) {
+        return res.json({
+          reply: liveTranslated,
+          source: 'scholar_ai_live',
+        });
+      }
+    }
+
+    // For open-ended general/English/literary questions outside local rules, resolve dynamically via Dictionary or Wikipedia
+    if (scholarResult.category === 'scholar_scope_notice') {
+      const trimmedClean = cleanWikiSearchQuery(promptText);
+      const isSingleWordQuery = /^[a-zA-Z-]{2,32}$/.test(trimmedClean);
+      if (isSingleWordQuery) {
+        const [dictProfile, siWord] = await Promise.all([
+          fetchDictionaryProfile(trimmedClean),
+          fetchMyMemoryTranslation(trimmedClean, 'en', 'si'),
+        ]);
+        if (dictProfile) {
+          const displayWord = trimmedClean.charAt(0).toUpperCase() + trimmedClean.slice(1);
+          const dictReply = `### "${displayWord}" *(${dictProfile.pos})*${dictProfile.phonetic ? ` — \`${dictProfile.phonetic}\`` : ''}
+- **Definition:** ${dictProfile.definition}${dictProfile.example ? `\n- **Example:** *"${dictProfile.example}"*` : ''}${siWord ? `\n- **Sinhala:** ${siWord}` : ''}`;
+          return res.json({
+            reply: dictReply,
+            source: 'scholar_ai_live',
+          });
+        }
+      }
+
+      const wikiSummary = await fetchWikipediaSummary(promptText);
+      if (wikiSummary) {
+        return res.json({
+          reply: wikiSummary,
+          source: 'scholar_ai_live',
+        });
+      }
+    }
+
     return res.json({
-      reply: fallbackReply,
+      reply: scholarResult.reply,
       source: 'scholar_engine',
     });
   } catch (err: any) {

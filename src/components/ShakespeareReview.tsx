@@ -64,6 +64,75 @@ export const ShakespeareReview: React.FC = () => {
   const [activeMeterLineIndex, setActiveMeterLineIndex] = useState(0);
   const [meterPlaying, setMeterPlaying] = useState(false);
   const [currentBeat, setCurrentBeat] = useState<number>(-1);
+  const audioCtxRef = React.useRef<AudioContext | null>(null);
+
+  const getAudioContext = (): AudioContext | null => {
+    if (typeof window === 'undefined') return null;
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return null;
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      audioCtxRef.current = new AudioCtx();
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume().catch(() => {});
+    }
+    return audioCtxRef.current;
+  };
+
+  const playMetronomeBeat = async (isStressed: boolean) => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    if (ctx.state === 'suspended') {
+      try {
+        await ctx.resume();
+      } catch {
+        return;
+      }
+    }
+
+    const now = ctx.currentTime + 0.01;
+
+    if (isStressed) {
+      // Stressed "DUM": Warm deep resonant beat + clear crisp transient
+      const lowOsc = ctx.createOscillator();
+      const lowGain = ctx.createGain();
+      lowOsc.type = 'sine';
+      lowOsc.frequency.setValueAtTime(240, now);
+      lowOsc.frequency.exponentialRampToValueAtTime(110, now + 0.14);
+      lowGain.gain.setValueAtTime(0.65, now);
+      lowGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+      lowOsc.connect(lowGain);
+      lowGain.connect(ctx.destination);
+      lowOsc.start(now);
+      lowOsc.stop(now + 0.17);
+
+      const chimeOsc = ctx.createOscillator();
+      const chimeGain = ctx.createGain();
+      chimeOsc.type = 'triangle';
+      chimeOsc.frequency.setValueAtTime(760, now);
+      chimeOsc.frequency.exponentialRampToValueAtTime(520, now + 0.08);
+      chimeGain.gain.setValueAtTime(0.35, now);
+      chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+      chimeOsc.connect(chimeGain);
+      chimeGain.connect(ctx.destination);
+      chimeOsc.start(now);
+      chimeOsc.stop(now + 0.1);
+    } else {
+      // Unstressed "da": Clear woodblock tick
+      const tickOsc = ctx.createOscillator();
+      const tickGain = ctx.createGain();
+      tickOsc.type = 'triangle';
+      tickOsc.frequency.setValueAtTime(540, now);
+      tickOsc.frequency.exponentialRampToValueAtTime(340, now + 0.055);
+      tickGain.gain.setValueAtTime(0.32, now);
+      tickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+      tickOsc.connect(tickGain);
+      tickGain.connect(ctx.destination);
+      tickOsc.start(now);
+      tickOsc.stop(now + 0.07);
+    }
+  };
 
   const filteredWorks = SHAKESPEARE_WORKS.filter(work => {
     if (selectedGenre === 'All') return true;
@@ -98,26 +167,50 @@ export const ShakespeareReview: React.FC = () => {
     window.speechSynthesis.speak(utterance);
   };
 
-  useEffect(() => {
-    let interval: any;
-    if (meterPlaying) {
-      setCurrentBeat(0);
-      interval = setInterval(() => {
-        setCurrentBeat((prev) => {
-          if (prev >= 9) {
-            setMeterPlaying(false);
-            return -1;
-          }
-          return prev + 1;
-        });
-      }, 550);
-    } else {
-      setCurrentBeat(-1);
-    }
-    return () => clearInterval(interval);
-  }, [meterPlaying]);
-
   const activeMeterLine = FAMOUS_LINES_FOR_METER[activeMeterLineIndex];
+
+  const handleToggleMeter = async () => {
+    if (meterPlaying) {
+      setMeterPlaying(false);
+      setCurrentBeat(-1);
+      return;
+    }
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      try {
+        await ctx.resume();
+      } catch {
+        // Continue to attempt playback
+      }
+    }
+    setMeterPlaying(true);
+  };
+
+  useEffect(() => {
+    if (!meterPlaying) {
+      setCurrentBeat(-1);
+      return;
+    }
+
+    const pattern = FAMOUS_LINES_FOR_METER[activeMeterLineIndex].stressPattern;
+    let beat = 0;
+    setCurrentBeat(0);
+    playMetronomeBeat(pattern[0]?.stress ?? false);
+
+    const interval = setInterval(() => {
+      beat += 1;
+      if (beat >= pattern.length) {
+        setMeterPlaying(false);
+        setCurrentBeat(-1);
+        clearInterval(interval);
+        return;
+      }
+      setCurrentBeat(beat);
+      playMetronomeBeat(pattern[beat]?.stress ?? false);
+    }, 550);
+
+    return () => clearInterval(interval);
+  }, [meterPlaying, activeMeterLineIndex]);
 
   return (
     <section id="shakespeare" className="py-16 lg:py-24 border-b border-stone-300/80 bg-[#F5EFE4]">
@@ -414,15 +507,16 @@ export const ShakespeareReview: React.FC = () => {
 
             {/* Metronome Beat Button */}
             <button
-              onClick={() => setMeterPlaying(!meterPlaying)}
-              className={`px-4 py-2 text-xs font-semibold rounded-xl border flex items-center gap-2 transition-all ${
+              type="button"
+              onClick={handleToggleMeter}
+              className={`px-4 py-2 text-xs font-semibold rounded-xl border flex items-center gap-2 transition-all cursor-pointer ${
                 meterPlaying
                   ? 'bg-amber-900 text-white border-amber-950'
                   : 'bg-amber-50 text-amber-950 border-amber-300 hover:bg-amber-100'
               }`}
             >
               <Music className={`w-3.5 h-3.5 ${meterPlaying ? 'animate-bounce' : ''}`} />
-              <span>{meterPlaying ? 'Playing Metric Beat...' : 'Hear the Metronome (da-DUM)'}</span>
+              <span>{meterPlaying ? 'Stop Metric Beat' : 'Hear the Metronome (da-DUM)'}</span>
             </button>
           </div>
 
@@ -430,12 +524,13 @@ export const ShakespeareReview: React.FC = () => {
           <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
             {FAMOUS_LINES_FOR_METER.map((item, idx) => (
               <button
+                type="button"
                 key={idx}
                 onClick={() => {
                   setActiveMeterLineIndex(idx);
                   setMeterPlaying(false);
                 }}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap border ${
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap border cursor-pointer ${
                   activeMeterLineIndex === idx
                     ? 'bg-stone-900 text-white border-stone-900'
                     : 'bg-[#FAF6EE] text-stone-700 border-stone-300 hover:bg-stone-100'
@@ -458,19 +553,25 @@ export const ShakespeareReview: React.FC = () => {
                 return (
                   <div key={beatIdx} className="flex flex-col items-center">
                     <span className="text-[10px] font-mono text-stone-400 mb-1">
-                      {item.stress ? 'DUM (/) ' : 'da (˘)'}
+                      {item.stress ? 'DUM (/)' : 'da (˘)'}
                     </span>
-                    <div
-                      className={`px-3 py-2.5 rounded-lg border text-sm sm:text-base font-serif transition-all ${
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentBeat(beatIdx);
+                        playMetronomeBeat(item.stress);
+                      }}
+                      title={`Click to hear ${item.stress ? 'stressed (DUM)' : 'unstressed (da)'} beat`}
+                      className={`px-3 py-2.5 rounded-lg border text-sm sm:text-base font-serif transition-all cursor-pointer ${
                         isCurrentBeat
                           ? 'bg-amber-800 text-white scale-110 shadow-md ring-2 ring-amber-400'
                           : item.stress
-                          ? 'bg-amber-100/90 border-amber-300 font-bold text-amber-950'
-                          : 'bg-[#FAF6EE] border-stone-300 text-stone-600'
+                          ? 'bg-amber-100/90 border-amber-300 font-bold text-amber-950 hover:bg-amber-200/80'
+                          : 'bg-[#FAF6EE] border-stone-300 text-stone-600 hover:bg-stone-200/60'
                       }`}
                     >
                       {item.syl}
-                    </div>
+                    </button>
                   </div>
                 );
               })}
